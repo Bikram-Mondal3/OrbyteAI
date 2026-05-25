@@ -156,6 +156,15 @@ const MODAL_TOOLS: ModalTool[] = [
     )
   },
   {
+    name: "Notion",
+    description: "Search across your Notion workspace, create pages, and manage databases natively",
+    icon: (
+      <div className="w-10 h-10 rounded-lg bg-white border-2 border-black flex items-center justify-center">
+        <span className="text-xl font-bold text-black font-serif">N</span>
+      </div>
+    )
+  },
+  {
     name: "Environment Toolset",
     description: "Create local and custom compute environments for files, scripts, and code execution",
     icon: (

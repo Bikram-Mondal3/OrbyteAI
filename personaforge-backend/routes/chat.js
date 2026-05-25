@@ -10,6 +10,7 @@ import { performWebSearch } from '../services/searchAgent.js';
 import { readFileContent } from '../services/readFileTool.js';
 import { isAgentMailConfigured } from '../services/agentMailToolset.js';
 import { isElevenLabsConfigured } from '../services/elevenLabsMcpToolset.js';
+import { isNotionConfigured } from '../services/notionMcpToolset.js';
 
 const router = Router();
 
@@ -215,6 +216,12 @@ async function handleAgentRequest(agentId, message, sessionId, attachedFiles, mo
         structuredMessage += isElevenLabsConfigured()
             ? `\n\nNote: You have access to the ElevenLabs MCP Server. You can generate speech from text, clone voices, process audio, create sound effects, and transcribe audio. Use these tools when audio generation or voice services are requested.`
             : `\n\nNote: ElevenLabs is enabled for this agent, but the backend is missing ELEVENLABS_API_KEY. Explain that audio features are unavailable.`;
+    }
+
+    if (enabledTools.includes("Notion")) {
+        structuredMessage += isNotionConfigured()
+            ? `\n\nNote: You have access to the Notion MCP Server. You can search workspace pages, create content, manage tasks/databases, update Notion documents and retrieve team/user information using the provided tools.`
+            : `\n\nNote: Notion MCP is enabled for this agent, but the backend is missing NOTION_TOKEN in its environment variables. Explain that Notion access is unavailable until this is configured.`;
     }
 
     let reply = await chatWithPersona(systemPrompt, history, structuredMessage, enabledTools, model);
