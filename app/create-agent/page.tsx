@@ -77,15 +77,6 @@ const MODAL_TOOLS: ModalTool[] = [
     )
   },
   {
-    name: "Database Memory Service",
-    description: "SQL-backed persistent memory for agents",
-    icon: (
-      <div className="w-10 h-10 rounded-lg bg-[#86EFAC]/20 border-2 border-black flex items-center justify-center">
-        <Database className="w-6 h-6 text-blue-600" />
-      </div>
-    )
-  },
-  {
     name: "GitHub MCP Server",
     description: "Access context, copilot spaces, actions, security, dependabot, gists, issues, PRs, and repos directly from GitHub.",
     icon: (
@@ -99,17 +90,6 @@ const MODAL_TOOLS: ModalTool[] = [
     )
   },
   {
-    name: "Datadog",
-    description: "Develop, evaluate, and monitor LLM applications",
-    icon: (
-      <div className="w-10 h-10 rounded-lg bg-purple-100 border-2 border-black flex items-center justify-center">
-        <svg className="w-6 h-6 text-purple-700" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm1 14.5h-2v-2h2v2zm0-4.5h-2V7h2v5z" />
-        </svg>
-      </div>
-    )
-  },
-  {
     name: "Daytona",
     description: "Execute code, run shell commands, and manage files in secure sandboxes",
     icon: (
@@ -119,24 +99,6 @@ const MODAL_TOOLS: ModalTool[] = [
           alt="Daytona"
           className="w-full h-full object-contain"
         />
-      </div>
-    )
-  },
-  {
-    name: "DBOS",
-    description: "Resilient, scalable, long-running agents with human approvals and safe versioning",
-    icon: (
-      <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center border-2 border-black">
-        <span className="text-[10px] font-black text-white leading-none">DBOS</span>
-      </div>
-    )
-  },
-  {
-    name: "e2a",
-    description: "Authenticated email gateway for AI agents with human-in-the-loop approval",
-    icon: (
-      <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center border-2 border-black">
-        <span className="text-xs font-black text-white leading-none">e2a</span>
       </div>
     )
   },
@@ -167,61 +129,6 @@ const MODAL_TOOLS: ModalTool[] = [
     icon: (
       <div className="w-10 h-10 rounded-lg bg-white border-2 border-black flex items-center justify-center p-1.5">
         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJ5yPOAbr-LrEa8ANO47RBo4f2txsvjPL-fw&s" alt="Postman" className="w-full h-full object-contain" />
-      </div>
-    )
-  },
-  {
-    name: "Environment Toolset",
-    description: "Create local and custom compute environments for files, scripts, and code execution",
-    icon: (
-      <div className="w-10 h-10 rounded-lg bg-[#FFE8B1] border-2 border-black flex items-center justify-center p-1">
-        <svg className="w-7 h-7 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <path d="M21 9H3M9 21V9" />
-        </svg>
-      </div>
-    )
-  },
-  {
-    name: "Agent Platform Express Mode",
-    description: "Try development with Agent Platform services at no cost",
-    icon: (
-      <div className="w-10 h-10 rounded-lg bg-[#5CC8FF]/20 border-2 border-black flex items-center justify-center">
-        <Sparkles className="w-6 h-6 text-[#5CC8FF]" />
-      </div>
-    )
-  },
-  {
-    name: "Firestore Session Service",
-    description: "Session state management for ADK agents using Firestore",
-    icon: (
-      <div className="w-10 h-10 rounded-lg bg-white border-2 border-black flex items-center justify-center p-1">
-        <svg className="w-full h-full" viewBox="0 0 24 24" fill="none">
-          <path d="M18.5 7.5L12 2L5.5 7.5L12 13L18.5 7.5Z" fill="#FFC107" />
-          <path d="M12 13L5.5 7.5V16.5L12 22L18.5 16.5V7.5L12 13Z" fill="#FF9800" />
-        </svg>
-      </div>
-    )
-  },
-  {
-    name: "Freeplay",
-    description: "Use Freeplay to build, optimize, and evaluate AI agents with end-to-end observability",
-    icon: (
-      <div className="w-10 h-10 rounded-lg bg-[#C4B5FD]/20 border-2 border-black flex items-center justify-center p-1">
-        <svg className="w-7 h-7 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="7" r="4" />
-          <circle cx="7" cy="16" r="4" />
-          <circle cx="17" cy="16" r="4" />
-        </svg>
-      </div>
-    )
-  },
-  {
-    name: "Future AGI",
-    description: "Trace, evaluate, and improve ADK agents with the traceAI OpenTelemetry integration",
-    icon: (
-      <div className="w-10 h-10 rounded-lg bg-gray-100 border-2 border-black flex items-center justify-center">
-        <Sparkles className="w-6 h-6 text-gray-400" />
       </div>
     )
   }
