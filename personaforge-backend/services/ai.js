@@ -17,7 +17,7 @@ const ZAI_MODEL = "glm";
 const GEMINI_3_1_PRO_MODEL = "gemini-large";
 const GROQ_LLAMA_MODEL = "llama-3.3-70b-versatile";
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_MODEL = "gemini-2.5-flash";
 setLogLevel(LogLevel.WARN);
 
 // ─── Groq internal task runner ───────────────────────────────────────────────
@@ -84,6 +84,7 @@ function normalizeModelSelection(model) {
     }
 
     const modelMap = {
+        "gemini-2.0-flash": "gemini-2.5-flash", // Map 2.0 to 2.5 because of quota limits
         "Gemini 2.5 Flash": GEMINI_MODEL,
         "Grok: Llama 3.3 80b versatile": GROQ_LLAMA_MODEL,
         "Grok: Llama 3.3 80b": GROQ_LLAMA_MODEL,
@@ -344,26 +345,13 @@ export async function chatWithPersona(systemPrompt, history, userMessage, enable
                 const errorMsg = typeof rawErrorMsg === 'string' ? rawErrorMsg : String(rawErrorMsg || "");
                 console.error("[Chat] ADK agent with tools failed:", errorMsg);
 
-                // If it's a quota error (429), try falling back to Groq immediately
-                if (errorMsg.includes("429") || errorMsg.includes("quota") || errorMsg.includes("limit")) {
-                    const groqApiKey = process.env.GROQ_API_KEY;
-                    if (groqApiKey) {
-                        console.log("[Chat] Gemini quota exceeded. Falling back to Groq Llama-3.3-70b...");
-                        try {
-                            const groqReply = await runGroqTask(
-                                fullPrompt,
-                                systemPrompt,
-                                { model: 'llama-3.3-70b-versatile', temperature: 0.4 }
-                            );
-                            if (groqReply) return groqReply;
-                        } catch (groqError) {
-                            console.error("[Chat] Groq fallback failed during 429 recovery:", safeErrorMessage(groqError));
-                        }
-                    }
+                // If it's a quota error (429), just return the error message directly without falling back
+                if (errorMsg.includes("429") || errorMsg.includes("quota") || errorMsg.includes("limit") || errorMsg.includes("QUOTA_EXCEEDED")) {
+                    return `Error: API Quota Exceeded. Please check your plan and billing details.`;
                 }
 
                 if (tools.length === 0) {
-                    throw error;
+                    return `Error generating response: ${errorMsg}`;
                 }
 
                 console.log("[Chat] Falling back to simple ADK chat (no tools)...");
@@ -380,23 +368,7 @@ export async function chatWithPersona(systemPrompt, history, userMessage, enable
                     const rawFallbackMsg = safeErrorMessage(fallbackError);
                     const fallbackErrorMsg = typeof rawFallbackMsg === 'string' ? rawFallbackMsg : String(rawFallbackMsg || "");
                     console.error("[Chat] Simple ADK fallback also failed:", fallbackErrorMsg);
-
-                    // Final attempt: Groq if even the simple ADK fails
-                    const groqApiKey = process.env.GROQ_API_KEY;
-                    if (groqApiKey) {
-                        console.log("[Chat] Final fallback to Groq Llama-3.3-70b...");
-                        try {
-                            const groqReply = await runGroqTask(
-                                fullPrompt,
-                                systemPrompt,
-                                { model: 'llama-3.3-70b-versatile', temperature: 0.4 }
-                            );
-                            if (groqReply) return groqReply;
-                        } catch (groqErrorFinal) {
-                            console.error("[Chat] Groq final fallback also failed:", safeErrorMessage(groqErrorFinal));
-                        }
-                    }
-                    throw fallbackError;
+                    return `Error generating response: ${fallbackErrorMsg}`;
                 }
             }
         }

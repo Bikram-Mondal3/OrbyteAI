@@ -157,7 +157,7 @@ ${prompt}`
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-3.0-flash',
           messages: [
             { role: 'system', content: 'You generate structured JSON configurations for AI agents based on the provided description.' },
             { role: 'user', content: systemInstruction }

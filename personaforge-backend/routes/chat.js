@@ -63,16 +63,6 @@ function detectGenericResponse(response, domain) {
         }
     }
 
-    // Check if domain is mentioned at all in first 100 chars (should be for greetings)
-    if (domain && response.length < 200) {
-        const domainLower = domain.toLowerCase();
-        const firstPart = lowerResponse.substring(0, 100);
-        if (!firstPart.includes(domainLower)) {
-            // Domain not mentioned in opening - likely generic
-            return true;
-        }
-    }
-
     return false;
 }
 
