@@ -71,11 +71,8 @@ const MODAL_TOOLS: ModalTool[] = [
     name: "AgentMail",
     description: "Manage inboxes, send and reply to emails, search threads, and download attachments via AgentMail",
     icon: (
-      <div className="w-10 h-10 rounded-lg bg-[#D9F99D] border-2 border-black flex items-center justify-center">
-        <svg className="w-6 h-6 text-[#166534]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-          <rect x="3" y="5" width="18" height="14" rx="2" />
-          <path d="M3 8l9 6 9-6" />
-        </svg>
+      <div className="w-10 h-10 rounded-lg bg-white border-2 border-black flex items-center justify-center p-1.5">
+        <img src="https://www.agentmail.to/favicon.ico?favicon.972a31ce.ico" alt="AgentMail" className="w-full h-full object-contain" />
       </div>
     )
   },
@@ -92,9 +89,9 @@ const MODAL_TOOLS: ModalTool[] = [
     name: "GitHub MCP Server",
     description: "Access context, copilot spaces, actions, security, dependabot, gists, issues, PRs, and repos directly from GitHub.",
     icon: (
-      <div className="w-10 h-10 rounded-lg bg-gray-100 border-2 border-black flex items-center justify-center p-1">
+      <div className="w-10 h-10 rounded-lg bg-white border-2 border-black flex items-center justify-center p-1">
         <img
-          src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+          src="https://cdn-icons-png.flaticon.com/256/25/25231.png"
           alt="GitHub MCP"
           className="w-full h-full object-contain"
         />
@@ -159,8 +156,8 @@ const MODAL_TOOLS: ModalTool[] = [
     name: "Notion",
     description: "Search across your Notion workspace, create pages, and manage databases natively",
     icon: (
-      <div className="w-10 h-10 rounded-lg bg-white border-2 border-black flex items-center justify-center">
-        <span className="text-xl font-bold text-black font-serif">N</span>
+      <div className="w-10 h-10 rounded-lg bg-white border-2 border-black flex items-center justify-center p-1.5">
+        <img src="https://icon-icons.com/download-file?file=https%3A%2F%2Fimages.icon-icons.com%2F2389%2FPNG%2F512%2Fnotion_logo_icon_145025.png&id=145025&pack_or_individual=pack" alt="Notion" className="w-full h-full object-contain" />
       </div>
     )
   },
@@ -168,8 +165,8 @@ const MODAL_TOOLS: ModalTool[] = [
     name: "Postman",
     description: "Connect to Postman ecosystem to manage collections, APIs, and workflows",
     icon: (
-      <div className="w-10 h-10 rounded-lg bg-[#FF6C37] border-2 border-black flex items-center justify-center">
-        <span className="text-xl font-bold text-white font-sans">P</span>
+      <div className="w-10 h-10 rounded-lg bg-white border-2 border-black flex items-center justify-center p-1.5">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJ5yPOAbr-LrEa8ANO47RBo4f2txsvjPL-fw&s" alt="Postman" className="w-full h-full object-contain" />
       </div>
     )
   },
