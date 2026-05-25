@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // For now, we'll let the client-side handle authentication
   // The AuthContext will redirect users appropriately
   return NextResponse.next()

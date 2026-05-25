@@ -1,12 +1,11 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { FunctionTool } from '@google/adk';
 import { z } from 'zod';
+import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const DEFAULT_SAFE_DIR = path.resolve(__dirname, '..', 'uploads');
 export const SAFE_FILE_DIR = path.resolve(process.env.PERSONAFORGE_SAFE_FILE_DIR || DEFAULT_SAFE_DIR);
 export const MAX_FILE_SIZE_BYTES = Number(process.env.PERSONAFORGE_MAX_FILE_SIZE_BYTES || 1024 * 1024);
@@ -33,20 +32,6 @@ const SUPPORTED_ENCODINGS = new Set(['utf8', 'utf-8', 'ascii', 'latin1', 'base64
 function normalizeEncoding(encoding = 'utf8') {
     const normalized = encoding.toLowerCase();
     return normalized === 'utf-8' ? 'utf8' : normalized;
-}
-
-function createResult(overrides) {
-    return JSON.stringify({
-        ok: false,
-        tool: 'read_file',
-        file_path: null,
-        file_type: null,
-        encoding: null,
-        size_bytes: null,
-        content: null,
-        error: null,
-        ...overrides
-    });
 }
 
 export async function ensureSafeFileDirectory() {
@@ -84,14 +69,13 @@ export async function readFileContent({ file_path, file_type, encoding = 'utf8' 
 
     try {
         if (!SUPPORTED_ENCODINGS.has(requestedEncoding)) {
-            return createResult({
-                file_path: requestedPath,
+            return {
+                status: 'error',
+                filePath: requestedPath,
                 encoding: requestedEncoding,
-                error: {
-                    code: 'UNSUPPORTED_ENCODING',
-                    message: `Unsupported encoding "${encoding}".`
-                }
-            });
+                message: `Unsupported encoding "${encoding}".`,
+                code: 'UNSUPPORTED_ENCODING'
+            };
         }
 
         const resolvedPath = resolveSafeFilePath(requestedPath);
@@ -99,15 +83,14 @@ export async function readFileContent({ file_path, file_type, encoding = 'utf8' 
         const inferredFileType = file_type || extension.replace('.', '') || 'text';
 
         if (!SUPPORTED_TEXT_EXTENSIONS.has(extension)) {
-            return createResult({
-                file_path: requestedPath,
-                file_type: inferredFileType,
+            return {
+                status: 'error',
+                filePath: requestedPath,
+                fileType: inferredFileType,
                 encoding: requestedEncoding,
-                error: {
-                    code: 'UNSUPPORTED_FILE_FORMAT',
-                    message: `Unsupported file format "${extension || 'unknown'}". Supported text formats include txt, json, md, csv, yaml, html, css, js, and ts.`
-                }
-            });
+                message: `Unsupported file format "${extension || 'unknown'}". Supported text formats include txt, json, md, csv, yaml, html, css, js, and ts.`,
+                code: 'UNSUPPORTED_FILE_FORMAT'
+            };
         }
 
         let stats;
@@ -115,41 +98,38 @@ export async function readFileContent({ file_path, file_type, encoding = 'utf8' 
             stats = await fs.stat(resolvedPath);
         } catch (error) {
             const code = error.code === 'ENOENT' ? 'FILE_NOT_FOUND' : 'FILE_STAT_FAILED';
-            return createResult({
-                file_path: requestedPath,
-                file_type: inferredFileType,
+            return {
+                status: 'error',
+                filePath: requestedPath,
+                fileType: inferredFileType,
                 encoding: requestedEncoding,
-                error: {
-                    code,
-                    message: code === 'FILE_NOT_FOUND' ? 'File not found.' : 'Unable to inspect the file.'
-                }
-            });
+                message: code === 'FILE_NOT_FOUND' ? 'File not found.' : 'Unable to inspect the file.',
+                code
+            };
         }
 
         if (!stats.isFile()) {
-            return createResult({
-                file_path: requestedPath,
-                file_type: inferredFileType,
+            return {
+                status: 'error',
+                filePath: requestedPath,
+                fileType: inferredFileType,
                 encoding: requestedEncoding,
-                size_bytes: stats.size,
-                error: {
-                    code: 'NOT_A_FILE',
-                    message: 'The requested path is not a file.'
-                }
-            });
+                sizeBytes: stats.size,
+                message: 'The requested path is not a file.',
+                code: 'NOT_A_FILE'
+            };
         }
 
         if (stats.size > MAX_FILE_SIZE_BYTES) {
-            return createResult({
-                file_path: requestedPath,
-                file_type: inferredFileType,
+            return {
+                status: 'error',
+                filePath: requestedPath,
+                fileType: inferredFileType,
                 encoding: requestedEncoding,
-                size_bytes: stats.size,
-                error: {
-                    code: 'FILE_TOO_LARGE',
-                    message: `File is too large to read safely. Maximum size is ${MAX_FILE_SIZE_BYTES} bytes.`
-                }
-            });
+                sizeBytes: stats.size,
+                message: `File is too large to read safely. Maximum size is ${MAX_FILE_SIZE_BYTES} bytes.`,
+                code: 'FILE_TOO_LARGE'
+            };
         }
 
         let content;
@@ -159,57 +139,40 @@ export async function readFileContent({ file_path, file_type, encoding = 'utf8' 
             const code = error.code === 'EACCES' || error.code === 'EPERM'
                 ? 'PERMISSION_DENIED'
                 : 'READ_FAILED';
-            return createResult({
-                file_path: requestedPath,
-                file_type: inferredFileType,
+            return {
+                status: 'error',
+                filePath: requestedPath,
+                fileType: inferredFileType,
                 encoding: requestedEncoding,
-                size_bytes: stats.size,
-                error: {
-                    code,
-                    message: code === 'PERMISSION_DENIED' ? 'Permission denied while reading the file.' : 'Unable to read the file.'
-                }
-            });
+                sizeBytes: stats.size,
+                message: code === 'PERMISSION_DENIED' ? 'Permission denied while reading the file.' : 'Unable to read the file.',
+                code
+            };
         }
 
-        if (content.length === 0) {
-            return createResult({
-                ok: true,
-                file_path: requestedPath,
-                file_type: inferredFileType,
-                encoding: requestedEncoding,
-                size_bytes: stats.size,
-                content: '',
-                error: {
-                    code: 'EMPTY_FILE',
-                    message: 'The file is empty.'
-                }
-            });
-        }
-
-        return createResult({
-            ok: true,
-            file_path: requestedPath,
-            file_type: inferredFileType,
+        return {
+            status: 'success',
+            filePath: resolvedPath,
+            requestedPath,
+            fileType: inferredFileType,
             encoding: requestedEncoding,
-            size_bytes: stats.size,
-            content,
-            error: null
-        });
+            sizeBytes: stats.size,
+            content
+        };
     } catch (error) {
-        return createResult({
-            file_path: requestedPath,
+        return {
+            status: 'error',
+            filePath: requestedPath,
             encoding: requestedEncoding,
-            error: {
-                code: 'UNSAFE_OR_INVALID_PATH',
-                message: error.message
-            }
-        });
+            message: error.message,
+            code: 'UNSAFE_OR_INVALID_PATH'
+        };
     }
 }
 
 export const readFileTool = new FunctionTool({
     name: 'read_file',
-    description: 'This tool reads the content of a file given its path and returns the content as text.',
+    description: 'Reads a local uploaded file from the safe uploads directory and returns its real contents for analysis or summarization.',
     parameters: z.object({
         file_path: z.string().describe('Path to a file inside the configured safe file directory.'),
         file_type: z.string().optional().describe('Optional hint for the file type, such as txt, json, md, or csv.'),

@@ -6,6 +6,9 @@ import { buildStructuredPrompt } from '../services/promptBuilder.js';
 import { chatWithPersona } from '../services/ai.js';
 import { authenticateApiKey } from '../middleware/auth.js';
 import { getAgentById } from '../services/agentStore.js';
+import { performWebSearch } from '../services/searchAgent.js';
+import { readFileContent } from '../services/readFileTool.js';
+import { isAgentMailConfigured } from '../services/agentMailToolset.js';
 
 const router = Router();
 
@@ -73,8 +76,21 @@ function detectGenericResponse(response, domain) {
     return false;
 }
 
-function isFileRelatedMessage(message) {
-    return /\b(file|document|upload|uploaded|attachment|attached|read|open|summari[sz]e|analy[sz]e|json|csv|txt|md|report)\b/i.test(message);
+function isFileRelatedMessage(message, attachedFiles = []) {
+    const normalizedMessage = String(message || "").toLowerCase();
+
+    if (!normalizedMessage) {
+        return false;
+    }
+
+    if (/\b(file|document|upload|uploaded|attachment|attached|json|csv|txt|md|read|open|analy[sz]e|summari[sz]e|content|contents|inside|what'?s in|what is in)\b/i.test(normalizedMessage)) {
+        return true;
+    }
+
+    return attachedFiles.some(file => {
+        const fileName = String(file.file_name || "").toLowerCase();
+        return fileName && normalizedMessage.includes(fileName);
+    });
 }
 
 function normalizeAttachedFiles(files) {
@@ -98,6 +114,58 @@ async function loadAgentRecord(agentId) {
     return getAgentById(agentId);
 }
 
+function selectFilesForMessage(message, attachedFiles) {
+    const normalizedMessage = String(message || "").toLowerCase();
+    const fileNameMatches = attachedFiles.filter(file => {
+        const fileName = String(file.file_name || "").toLowerCase();
+        return fileName && normalizedMessage.includes(fileName);
+    });
+
+    if (fileNameMatches.length > 0) {
+        return fileNameMatches;
+    }
+
+    if (attachedFiles.length === 1) {
+        return attachedFiles;
+    }
+
+    return attachedFiles.slice(0, 3);
+}
+
+async function buildAttachedFilePromptContext(message, attachedFiles) {
+    const selectedFiles = selectFilesForMessage(message, attachedFiles);
+    const sections = [];
+
+    for (const file of selectedFiles) {
+        const result = await readFileContent({ file_path: file.file_path });
+
+        if (result?.status === 'success') {
+            sections.push([
+                `FILE: ${file.file_name}`,
+                `PATH: ${file.file_path}`,
+                `SIZE: ${result.sizeBytes} bytes`,
+                "CONTENT START",
+                result.content,
+                "CONTENT END"
+            ].join("\n"));
+            continue;
+        }
+
+        const errorMessage = result?.message || "Unknown file read error.";
+        sections.push([
+            `FILE: ${file.file_name}`,
+            `PATH: ${file.file_path}`,
+            `READ ERROR: ${errorMessage}`
+        ].join("\n"));
+    }
+
+    if (sections.length === 0) {
+        return "";
+    }
+
+    return `\n\nAttached file content loaded by the server:\n${sections.join("\n\n")}\nUse only this loaded content for any summary, analysis, or quotation of the file. If a file section contains READ ERROR, explain that clearly and do not invent content.`;
+}
+
 function assertAgentIdentity(agent, agentId) {
     const domain = typeof agent?.domain === "string" ? agent.domain.trim() : "";
     const systemPrompt = typeof agent?.systemPrompt === "string" ? agent.systemPrompt.trim() : "";
@@ -113,13 +181,7 @@ function assertAgentIdentity(agent, agentId) {
     return { domain, systemPrompt };
 }
 
-function hasDomainMention(response, domain) {
-    if (!domain) return false;
-    const domainLower = domain.toLowerCase();
-    return response.toLowerCase().includes(domainLower);
-}
-
-async function handleAgentRequest(agentId, message, sessionId, attachedFiles) {
+async function handleAgentRequest(agentId, message, sessionId, attachedFiles, model) {
     const agent = await loadAgentRecord(agentId);
     if (!agent) {
         return { status: 404, payload: { error: "Agent not found" } };
@@ -130,18 +192,6 @@ async function handleAgentRequest(agentId, message, sessionId, attachedFiles) {
 
     const { domain, systemPrompt } = assertAgentIdentity(agent, agentId);
 
-    if (isFileRelatedMessage(message) && !canReadFiles) {
-        return {
-            status: 200,
-            payload: {
-                message: "I cannot inspect files for this agent because the Read File tool is not enabled. Enable Read File in the agent tools, then upload the file again.",
-                blocked: false,
-                session_id: sessionId,
-                tool_required: "Read File"
-            }
-        };
-    }
-
     const history = await getHistory(sessionId);
     let structuredMessage = buildStructuredPrompt(message, domain);
 
@@ -150,24 +200,27 @@ async function handleAgentRequest(agentId, message, sessionId, attachedFiles) {
             .map(file => `- ${file.file_name}: ${file.file_path}${file.size_bytes !== null ? ` (${file.size_bytes} bytes)` : ""}`)
             .join("\n");
         structuredMessage += `\n\nUploaded files available to this session:\n${fileContext}\nIf the user refers to "the file", "this file", an uploaded file, or asks to read/analyze/summarize file content, call read_file with the matching file_path before answering.`;
+
+        if (isFileRelatedMessage(message, attachedFiles)) {
+            structuredMessage += await buildAttachedFilePromptContext(message, attachedFiles);
+        }
     }
 
-    let reply = await chatWithPersona(systemPrompt, history, structuredMessage, enabledTools);
-
-    if (detectGenericResponse(reply, domain) || !hasDomainMention(reply, domain)) {
-        const regenPrompt = `${systemPrompt}\n\nRespond ONLY as a ${domain} specialist. Remove all generic assistant language. If a query is outside your domain, politely refuse and redirect to ${domain}.`;
-        reply = await chatWithPersona(regenPrompt, history, structuredMessage, enabledTools);
+    if (enabledTools.includes("Google Search")) {
+        structuredMessage += `\n\nNote: You have access to a Google Search tool. If you need current events, latest news, or real-time data to answer the user's request accurately, you MUST use the search tool to find facts before responding. Provide the final answer directly based on the search results without explaining that you used a tool.`;
     }
 
-    if (!hasDomainMention(reply, domain)) {
-        return {
-            status: 422,
-            payload: {
-                error: "Response failed domain validation",
-                blocked: true,
-                session_id: sessionId
-            }
-        };
+    if (enabledTools.includes("AgentMail")) {
+        structuredMessage += isAgentMailConfigured()
+            ? `\n\nNote: You have access to AgentMail tools for inbox and email management. Use them for inbox creation, email search, thread lookup, sending, replying, forwarding, attachment downloads, and read/unread actions. Always confirm with the user before sending, forwarding, deleting, or making any irreversible email change.`
+            : `\n\nNote: AgentMail is enabled for this agent, but the backend is missing AGENTMAIL_API_KEY. Explain that email actions are unavailable until AgentMail is configured, and do not pretend an inbox or email action succeeded.`;
+    }
+
+    let reply = await chatWithPersona(systemPrompt, history, structuredMessage, enabledTools, model);
+
+    if (detectGenericResponse(reply, domain)) {
+        const regenPrompt = `${systemPrompt}\n\nRespond DIRECTLY. Remove all generic assistant language ("As an AI...", "I can help with..."). Stay in persona implicitly without self-promotion.`;
+        reply = await chatWithPersona(regenPrompt, history, structuredMessage, enabledTools, model);
     }
 
     await saveHistory(sessionId, message, reply);
@@ -178,7 +231,7 @@ async function handleAgentRequest(agentId, message, sessionId, attachedFiles) {
 router.post('/:agentId/chat', authenticateApiKeyOrLocalSandbox, async (req, res) => {
     try {
         const { agentId } = req.params;
-        const { message, session_id } = req.body;
+        const { message, session_id, model } = req.body;
         const attachedFiles = normalizeAttachedFiles(req.body.attached_files);
 
         if (!message || !session_id) {
@@ -199,7 +252,7 @@ router.post('/:agentId/chat', authenticateApiKeyOrLocalSandbox, async (req, res)
         }
 
         // 2. Single pipeline for all requests
-        const result = await handleAgentRequest(agentId, message, session_id, attachedFiles);
+        const result = await handleAgentRequest(agentId, message, session_id, attachedFiles, model);
         return res.status(result.status).json(result.payload);
 
     } catch (error) {
@@ -211,6 +264,26 @@ router.post('/:agentId/chat', authenticateApiKeyOrLocalSandbox, async (req, res)
         }
 
         return res.status(500).json({ error: "Internal server error during chat" });
+    }
+});
+
+router.post('/search', authenticateApiKeyOrLocalSandbox, async (req, res) => {
+    try {
+        const { message, session_id } = req.body;
+        if (!message) {
+            return res.status(400).json({ error: "message is required" });
+        }
+
+        console.log(`[Web Search] Processing query: "${message}"`);
+        const result = await performWebSearch(message);
+
+        return res.json({
+            message: result,
+            session_id
+        });
+    } catch (error) {
+        console.error("Search Error:", safeErrorMessage(error));
+        return res.status(500).json({ error: "Search failed" });
     }
 });
 

@@ -33,7 +33,7 @@ async function runTests() {
         console.log("Keyword check result:", keywordBlock);
 
         // 5. Test Judge Message
-        console.log("\n--- Testing judgeMessage (ADK Gemini) ---");
+        console.log("\n--- Testing judgeMessage (AI Service) ---");
         const judgementSafe = await judgeMessage("What's the best time to visit Kyoto?", agentConfig.domain);
         console.log("Judgement Safe:", judgementSafe);
         const judgementUnsafe = await judgeMessage("Can you translate this Python script?", agentConfig.domain);

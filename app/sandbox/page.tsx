@@ -9,8 +9,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft,
-  Send,
-  Trash2,
+  Bot,
   Edit,
   Shield,
   AlertTriangle,
@@ -25,7 +24,11 @@ import {
   Plus,
   FileText,
   Check,
-  Copy
+  Copy,
+  AtSign,
+  Globe,
+  Trash2,
+  Send,
 } from "lucide-react"
 
 function cn(...classes: (string | undefined | null | boolean)[]): string {
@@ -180,6 +183,7 @@ export default function SandboxPage() {
   const { token } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [logs, setLogs] = useState<LogEntry[]>([
     { id: 1, type: "info", message: "Sandbox initializing...", timestamp: "" }
   ])
@@ -193,6 +197,19 @@ export default function SandboxPage() {
   const [savedAgents, setSavedAgents] = useState<any[]>([])
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null)
   const [isLoadingAgentId, setIsLoadingAgentId] = useState(false)
+  const [selectedModel, setSelectedModel] = useState("Gemini 2.5 Flash")
+  const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false)
+  const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false)
+  const [isSearchEnabled, setIsSearchEnabled] = useState(false)
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "inherit";
+      const scrollHeight = textareaRef.current.scrollHeight;
+      textareaRef.current.style.height = `${Math.min(scrollHeight, 200)}px`;
+    }
+  }, [inputValue]);
 
   const [config, setConfig] = useState({
     name: "New Agent",
@@ -207,6 +224,10 @@ export default function SandboxPage() {
   const canReadFiles = (config.tools || []).includes("Read File")
   const domainLabel = (config.expertise || "").trim() || "this domain"
   const domainLabelLower = domainLabel.toLowerCase()
+  const usesGeminiToolRuntime = selectedModel === "Gemini 2.5 Flash"
+  const fileReadStatusMessage = usesGeminiToolRuntime
+    ? "Read File enabled"
+    : "Read File enabled via server load"
 
   useEffect(() => {
     setMounted(true)
@@ -244,6 +265,7 @@ export default function SandboxPage() {
         const newConfig = {
           ...config,
           ...parsed,
+          expertise: parsed.domain || parsed.expertise || config.expertise,
           id: parsed.id || parsed._id // Capture ID if present
         }
 
@@ -418,14 +440,19 @@ export default function SandboxPage() {
         console.warn("Failed to fetch user SMTP for chat, falling back to global")
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/${agentId}/chat`, {
+      const endpoint = isSearchEnabled
+        ? `${process.env.NEXT_PUBLIC_API_URL}/v1/search`
+        : `${process.env.NEXT_PUBLIC_API_URL}/v1/${agentId}/chat`;
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: messageText,
           session_id: sessionId,
           attached_files: canReadFiles ? uploadedFiles : [],
-          smtpConfig: userSmtp
+          smtpConfig: userSmtp,
+          model: selectedModel,
         })
       })
       const data = await res.json()
@@ -440,16 +467,24 @@ export default function SandboxPage() {
       setMessages(prev => [...prev, aiMessage])
       setIsTyping(false)
 
+      if (isSearchEnabled) {
+        setIsSearchEnabled(false); // Reset search after use if desired, or keep it.
+        // The user said "when user click on it and send any msg, then the msg is not comes to the selected model... send the genertaed output to the frontend"
+        // I'll reset it to avoid accidental searches.
+      }
+
       // Update stats
-      if (messages.length === 1) { // First exchange (Intro + User First Message)
-        updateAgentStats({ testCount: 1, totalApiCalls: 1 })
-      } else {
-        updateAgentStats({ totalApiCalls: 1 })
+      if (!isSearchEnabled) {
+        if (messages.length === 1) { // First exchange (Intro + User First Message)
+          updateAgentStats({ testCount: 1, totalApiCalls: 1 })
+        } else {
+          updateAgentStats({ totalApiCalls: 1 })
+        }
       }
 
       setLogs(prev => [
         ...prev,
-        { id: Date.now() + Math.random(), type: !res.ok || data.blocked ? "warning" : "success", message: !res.ok ? responseText : data.blocked ? "Guardrail blocked response" : "Response generated", timestamp: new Date().toLocaleTimeString() }
+        { id: Date.now() + Math.random(), type: !res.ok || data.blocked ? "warning" : "success", message: !res.ok ? responseText : data.blocked ? "Guardrail blocked response" : isSearchEnabled ? "Web search completed" : "Response generated", timestamp: new Date().toLocaleTimeString() }
       ])
     } catch (e) {
       setMessages(prev => [...prev, { id: Date.now() + Math.random(), type: "ai", content: "Error connecting to AI.", timestamp: new Date().toLocaleTimeString() }])
@@ -621,25 +656,48 @@ export default function SandboxPage() {
           {/* Agent Selector Dropdown */}
           {savedAgents.length > 0 && (
             <div className="relative">
-              <select
-                value={selectedAgentId || ''}
-                onChange={(e) => {
-                  const agent = savedAgents.find(a => (a._id || a.id) === e.target.value)
-                  if (agent) handleSelectAgent(agent)
-                }}
-                className="px-4 py-2 text-sm font-bold border-[3px] border-black rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-[#FF7A00]/30 transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+              <button
+                onClick={() => setIsAgentDropdownOpen(!isAgentDropdownOpen)}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-bold border-[3px] border-black rounded-lg bg-white hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-[#FF7A00]/30 transition-all cursor-pointer shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
               >
-                <option value="">Select an agent...</option>
-                {savedAgents.map((agent) => (
-                  <option key={agent._id || agent.id} value={agent._id || agent.id}>
-                    {agent.name}
-                  </option>
-                ))}
-              </select>
+                <span>{savedAgents.find(a => (a._id || a.id) === selectedAgentId)?.name || 'Select an agent...'}</span>
+                <svg className={cn("w-4 h-4 transition-transform", isAgentDropdownOpen && "rotate-180")} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <AnimatePresence>
+                {isAgentDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute right-0 mt-2 w-64 bg-[#FFF4E2] border-[3px] border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-2 z-50 max-h-64 overflow-y-auto"
+                  >
+                    <div className="font-bold text-xs text-gray-500 uppercase px-3 pt-2 pb-1">Your Agents</div>
+                    {savedAgents.map((agent) => (
+                      <button
+                        key={agent._id || agent.id}
+                        onClick={() => {
+                          handleSelectAgent(agent)
+                          setIsAgentDropdownOpen(false)
+                        }}
+                        className={cn(
+                          "w-full text-left px-3 py-2 rounded-md font-bold text-sm hover:bg-[#FDF3B1] transition-colors flex items-center gap-3",
+                          (agent._id || agent.id) === selectedAgentId && "bg-[#FDF3B1]"
+                        )}
+                      >
+                        <Bot className="w-5 h-5 text-[#FF7A00]" />
+                        {agent.name}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
 
-          <Button 
+          <Button
             onClick={() => setIsDeployModalOpen(true)}
             disabled={isLoadingAgentId || !agentId}
             title={!agentId ? "Agent ID is loading or unavailable" : "Get API Keys"}
@@ -802,11 +860,11 @@ export default function SandboxPage() {
 
           {/* Chat Input */}
           <div className="border-t-[3px] border-black p-4 bg-[#FDF3B1]">
-            <div className="bg-[#FFF4E2] border-[3px] border-black rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col overflow-hidden focus-within:ring-4 focus-within:ring-[#FF7A00]/30 transition-all">
+            <div className="bg-[#FFF4E2] border-[3px] border-black rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col focus-within:ring-4 focus-within:ring-[#FF7A00]/30 transition-all relative">
 
               {/* Uploaded Files Area Top of Textarea */}
               {uploadedFiles.length > 0 && (
-                <div className="pt-3 px-3 flex flex-wrap gap-2">
+                <div className="pt-3 px-3 flex flex-wrap items-center gap-2">
                   {uploadedFiles.map((file) => (
                     <div
                       key={file.file_path}
@@ -826,64 +884,190 @@ export default function SandboxPage() {
                       </button>
                     </div>
                   ))}
+                  <div className="px-3 py-1.5 bg-[#E0F2FE] border-[2px] border-black rounded-xl text-xs font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    {fileReadStatusMessage}
+                  </div>
                 </div>
               )}
 
-              {/* Input Area */}
-              <textarea
-                placeholder={`Ask ${config?.name || 'anything'}...`}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    if (inputValue.trim() || uploadedFiles.length > 0) {
-                      handleSend();
+              <div className="relative">
+                {/* Plus Icon at Top Left */}
+                <label className={cn(
+                  "absolute top-2.5 left-3 flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200 cursor-pointer border-[2px] border-transparent hover:border-black hover:bg-white hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] z-10",
+                  !canReadFiles && "opacity-50 cursor-not-allowed hover:border-transparent hover:bg-transparent hover:shadow-none"
+                )}>
+                  <Plus className="w-5 h-5 text-gray-600" />
+                  <input
+                    type="file"
+                    accept=".txt,.json,.md,.markdown,.csv,.tsv,.log,.yaml,.yml,.xml,.html,.css,.js,.ts"
+                    className="hidden"
+                    disabled={!canReadFiles}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleFileUpload(file);
+                      }
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+
+                {/* Input Area */}
+                <textarea
+                  ref={textareaRef}
+                  placeholder={isSearchEnabled ? "Search the web with Gemini 2.5 Flash..." : `Ask ${config?.name || 'anything'}...`}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      if (inputValue.trim() || uploadedFiles.length > 0) {
+                        handleSend();
+                      }
                     }
-                  }
-                }}
-                className="w-full bg-transparent px-4 py-3 text-base outline-none resize-none min-h-[80px] font-medium"
-                rows={2}
-              />
+                  }}
+                  className="w-full bg-transparent pl-14 pr-4 pt-[13px] pb-2 text-base outline-none resize-none min-h-[52px] font-medium"
+                  rows={1}
+                />
+              </div>
 
               {/* Bottom Actions */}
               <div className="px-3 pb-3 flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <label className={cn(
-                    "flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 cursor-pointer border-[2px] border-transparent hover:border-black hover:bg-white hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]",
-                    !canReadFiles && "opacity-50 cursor-not-allowed hover:border-transparent hover:bg-transparent hover:shadow-none"
-                  )}>
-                    <Plus className="w-6 h-6" />
-                    <input
-                      type="file"
-                      accept=".txt,.json,.md,.markdown,.csv,.tsv,.log,.yaml,.yml,.xml,.html,.css,.js,.ts"
-                      className="hidden"
-                      disabled={!canReadFiles}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          handleFileUpload(file);
-                        }
-                        e.target.value = "";
-                      }}
-                    />
-                  </label>
+                  <div className="relative">
+                    <button
+                      onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FFF4E2] border-[3px] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-[#FDF3B1] transition-all"
+                    >
+                      <AtSign className="w-5 h-5" />
+                      <span className="font-bold text-sm">{selectedModel}</span>
+                    </button>
+                    <AnimatePresence>
+                      {isModelDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="absolute bottom-full mb-2 w-64 bg-[#FFF4E2] border-[3px] border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-2 z-20 max-h-60 overflow-y-auto model-dropdown"
+                        >
+                          <div className="font-bold text-xs text-gray-500 uppercase px-3 pt-2 pb-1">Reasoning Models</div>
+                          <button
+                            onClick={() => { setSelectedModel("deepseek/DeepSeek-V3-0324"); setIsModelDropdownOpen(false); }}
+                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                          >
+                            <img src="https://img.icons8.com/color/512/deepseek.png" alt="DeepSeek" className="w-5 h-5 rounded-full" />
+                            DeepSeek-V3
+                          </button>
+                          <button
+                            onClick={() => { setSelectedModel("qwen-coder"); setIsModelDropdownOpen(false); }}
+                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                          >
+                            <img src="https://qwenlm.github.io/img/logo.png" alt="Qwen" className="w-5 h-5 rounded-full" />
+                            Qwen3 Coder 30B
+                          </button>
+                          <button
+                            onClick={() => { setSelectedModel("kimi"); setIsModelDropdownOpen(false); }}
+                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                          >
+                            <img src="https://aimode.co/wp-content/uploads/2025/03/Kimi-AI-Logo.webp" alt="Kimi" className="w-5 h-5 rounded-full" />
+                            Moonshot Kimi K2.5
+                          </button>
+
+                          <div className="font-bold text-xs text-gray-500 uppercase px-3 pt-2 pb-1">Fast Models</div>
+                          <button
+                            onClick={() => { setSelectedModel("Gemini 2.5 Flash"); setIsModelDropdownOpen(false); }}
+                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                          >
+                            <img src="https://static.vecteezy.com/system/resources/previews/055/687/065/non_2x/gemini-google-icon-symbol-logo-free-png.png" alt="Gemini" className="w-5 h-5 rounded-full" />
+                            Gemini 2.5 Flash
+                          </button>
+                          <button
+                            onClick={() => { setSelectedModel("claude-fast"); setIsModelDropdownOpen(false); }}
+                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                          >
+                            <img src="https://woopt.modeltheme.com/wp-content/uploads/2025/07/04claude.png" alt="Claude" className="w-5 h-5 rounded-full" />
+                            Claude Haiku 4.5
+                          </button>
+                          <button
+                            onClick={() => { setSelectedModel("openai/gpt-4o"); setIsModelDropdownOpen(false); }}
+                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                          >
+                            <img src="https://static.vecteezy.com/system/resources/previews/022/227/364/non_2x/openai-chatgpt-logo-icon-free-png.png" alt="OpenAI" className="w-5 h-5 rounded-full" />
+                            OpenAI GPT-4o
+                          </button>
+
+                          <div className="font-bold text-xs text-gray-500 uppercase px-3 pt-2 pb-1">General Chat</div>
+                          <button
+                            onClick={() => { setSelectedModel("Grok: Llama 3.3 80b versatile"); setIsModelDropdownOpen(false); }}
+                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                          >
+                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHVsO5kFrri_uqZdlB6mACC2bdyyy6D0bYag&s" alt="Groq" className="w-5 h-5 rounded-full" />
+                            Grok: Llama 3.3 80b
+                          </button>
+                          <button
+                            onClick={() => { setSelectedModel("gemini-large"); setIsModelDropdownOpen(false); }}
+                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                          >
+                            <img src="https://static.vecteezy.com/system/resources/previews/055/687/065/non_2x/gemini-google-icon-symbol-logo-free-png.png" alt="Gemini" className="w-5 h-5 rounded-full" />
+                            Gemini 3.1 Pro
+                          </button>
+                          <button
+                            onClick={() => { setSelectedModel("glm"); setIsModelDropdownOpen(false); }}
+                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                          >
+                            <img src="https://pbs.twimg.com/profile_images/1970775077181411328/W8XKaUIh_400x400.jpg" alt="Z.ai" className="w-5 h-5 rounded-full" />
+                            Z.ai GLM-5.1
+                          </button>
+                          <button
+                            onClick={() => { setSelectedModel("kimi"); setIsModelDropdownOpen(false); }}
+                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                          >
+                            <img src="https://aimode.co/wp-content/uploads/2025/03/Kimi-AI-Logo.webp" alt="Kimi" className="w-5 h-5 rounded-full" />
+                            Moonshot Kimi K2.5
+                          </button>
+                          <button
+                            onClick={() => { setSelectedModel("claude-fast"); setIsModelDropdownOpen(false); }}
+                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                          >
+                            <img src="https://woopt.modeltheme.com/wp-content/uploads/2025/07/04claude.png" alt="Claude" className="w-5 h-5 rounded-full" />
+                            Claude Haiku 4.5
+                          </button>
+
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <button
+                    type="button"
+                    onClick={() => setIsSearchEnabled(!isSearchEnabled)}
+                    className={cn(
+                      "p-2 rounded-lg border-[2px] transition-all",
+                      isSearchEnabled
+                        ? "bg-[#5CC8FF] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                        : "border-transparent hover:border-black hover:bg-white"
+                    )}
+                    title="Web Search Mode"
+                  >
+                    <Globe className={cn("w-5 h-5", isSearchEnabled ? "text-black" : "text-gray-600")} />
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => handleClearChat()}
-                    className="flex justify-center items-center w-10 h-10 rounded-full border-[2px] border-transparent hover:border-black hover:bg-white hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all text-black"
+                    className="p-2 hover:bg-red-50 rounded-lg text-gray-600 hover:text-red-500 transition-colors"
                     title="Clear Chat"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
                   <button
+                    type="button"
                     onClick={handleSend}
                     disabled={(!inputValue.trim() && uploadedFiles.length === 0) || isTyping}
-                    className="flex items-center justify-center w-10 h-10 bg-black text-white rounded-full hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:hover:scale-100"
+                    className="p-2 bg-[#FF7A00] text-white border-[2px] border-black rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all disabled:opacity-50"
                   >
-                    <Send className="w-4 h-4 ml-0.5 mt-0.5" />
+                    <Send className="w-5 h-5" />
                   </button>
                 </div>
               </div>
@@ -1068,7 +1252,7 @@ export default function SandboxPage() {
                     <label className="block font-bold">Agent Tools</label>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {["Web Search", "Visit URL", "Read File", "Send Email", "Google Calendar", "AWS MCP Docs"].map(tool => (
+                    {["Read File", "Gmail", "Google Calendar", "Daytona", "AgentMail"].map(tool => (
                       <label key={tool} className={cn(
                         "flex items-center gap-2 px-3 py-2 border-[2px] border-black rounded-lg cursor-pointer transition-colors",
                         (editConfigForm.tools || []).includes(tool) ? "bg-[#FFD84D]" : "bg-white hover:bg-gray-50"

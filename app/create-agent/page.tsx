@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ArrowLeft, Sparkles, TestTube, Save, Database, Shield, MessageSquare, Zap } from "lucide-react"
+import { ArrowLeft, Sparkles, TestTube, Save, Database, Shield, MessageSquare, Zap, FileText, Plus, X, Search } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 
@@ -14,7 +14,7 @@ function cn(...classes: (string | undefined | null | boolean)[]): string {
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "default" | "outline" | "ghost"
   size?: "default" | "sm" | "lg"
-} 
+}
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "default", ...props }, ref) => {
@@ -60,6 +60,145 @@ const FORGE_STEPS = [
   "Setting memory mode"
 ]
 
+interface ModalTool {
+  name: string
+  description: string
+  icon: React.ReactNode
+}
+
+const MODAL_TOOLS: ModalTool[] = [
+  {
+    name: "AgentMail",
+    description: "Manage inboxes, send and reply to emails, search threads, and download attachments via AgentMail",
+    icon: (
+      <div className="w-10 h-10 rounded-lg bg-[#D9F99D] border-2 border-black flex items-center justify-center">
+        <svg className="w-6 h-6 text-[#166534]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="M3 8l9 6 9-6" />
+        </svg>
+      </div>
+    )
+  },
+  {
+    name: "Database Memory Service",
+    description: "SQL-backed persistent memory for agents",
+    icon: (
+      <div className="w-10 h-10 rounded-lg bg-[#86EFAC]/20 border-2 border-black flex items-center justify-center">
+        <Database className="w-6 h-6 text-blue-600" />
+      </div>
+    )
+  },
+  {
+    name: "Datadog",
+    description: "Develop, evaluate, and monitor LLM applications",
+    icon: (
+      <div className="w-10 h-10 rounded-lg bg-purple-100 border-2 border-black flex items-center justify-center">
+        <svg className="w-6 h-6 text-purple-700" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm1 14.5h-2v-2h2v2zm0-4.5h-2V7h2v5z" />
+        </svg>
+      </div>
+    )
+  },
+  {
+    name: "Daytona",
+    description: "Execute code, run shell commands, and manage files in secure sandboxes",
+    icon: (
+      <div className="w-10 h-10 rounded-lg bg-white border-2 border-black flex items-center justify-center overflow-hidden p-1">
+        <img
+          src="https://framerusercontent.com/images/eh4XDIID3RQ61pplgsVvLkwrnrk.svg?width=454&height=320"
+          alt="Daytona"
+          className="w-full h-full object-contain"
+        />
+      </div>
+    )
+  },
+  {
+    name: "DBOS",
+    description: "Resilient, scalable, long-running agents with human approvals and safe versioning",
+    icon: (
+      <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center border-2 border-black">
+        <span className="text-[10px] font-black text-white leading-none">DBOS</span>
+      </div>
+    )
+  },
+  {
+    name: "e2a",
+    description: "Authenticated email gateway for AI agents with human-in-the-loop approval",
+    icon: (
+      <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center border-2 border-black">
+        <span className="text-xs font-black text-white leading-none">e2a</span>
+      </div>
+    )
+  },
+  {
+    name: "ElevenLabs",
+    description: "Generate speech, clone voices, transcribe audio, and create sound effects",
+    icon: (
+      <div className="w-10 h-10 rounded-lg bg-[#FFF4E2] border-2 border-black flex items-center justify-center">
+        <div className="flex gap-0.5">
+          <div className="w-1.5 h-5 bg-black rounded-full" />
+          <div className="w-1.5 h-5 bg-black rounded-full" />
+        </div>
+      </div>
+    )
+  },
+  {
+    name: "Environment Toolset",
+    description: "Create local and custom compute environments for files, scripts, and code execution",
+    icon: (
+      <div className="w-10 h-10 rounded-lg bg-[#FFE8B1] border-2 border-black flex items-center justify-center p-1">
+        <svg className="w-7 h-7 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M21 9H3M9 21V9" />
+        </svg>
+      </div>
+    )
+  },
+  {
+    name: "Agent Platform Express Mode",
+    description: "Try development with Agent Platform services at no cost",
+    icon: (
+      <div className="w-10 h-10 rounded-lg bg-[#5CC8FF]/20 border-2 border-black flex items-center justify-center">
+        <Sparkles className="w-6 h-6 text-[#5CC8FF]" />
+      </div>
+    )
+  },
+  {
+    name: "Firestore Session Service",
+    description: "Session state management for ADK agents using Firestore",
+    icon: (
+      <div className="w-10 h-10 rounded-lg bg-white border-2 border-black flex items-center justify-center p-1">
+        <svg className="w-full h-full" viewBox="0 0 24 24" fill="none">
+          <path d="M18.5 7.5L12 2L5.5 7.5L12 13L18.5 7.5Z" fill="#FFC107" />
+          <path d="M12 13L5.5 7.5V16.5L12 22L18.5 16.5V7.5L12 13Z" fill="#FF9800" />
+        </svg>
+      </div>
+    )
+  },
+  {
+    name: "Freeplay",
+    description: "Use Freeplay to build, optimize, and evaluate AI agents with end-to-end observability",
+    icon: (
+      <div className="w-10 h-10 rounded-lg bg-[#C4B5FD]/20 border-2 border-black flex items-center justify-center p-1">
+        <svg className="w-7 h-7 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="7" r="4" />
+          <circle cx="7" cy="16" r="4" />
+          <circle cx="17" cy="16" r="4" />
+        </svg>
+      </div>
+    )
+  },
+  {
+    name: "Future AGI",
+    description: "Trace, evaluate, and improve ADK agents with the traceAI OpenTelemetry integration",
+    icon: (
+      <div className="w-10 h-10 rounded-lg bg-gray-100 border-2 border-black flex items-center justify-center">
+        <Sparkles className="w-6 h-6 text-gray-400" />
+      </div>
+    )
+  }
+]
+
 export default function CreateAgentPage() {
   const [description, setDescription] = useState("")
   const [agentName, setAgentName] = useState("")
@@ -70,13 +209,21 @@ export default function CreateAgentPage() {
   const [responseLength, setResponseLength] = useState("medium")
   const [safetyFilters, setSafetyFilters] = useState(true)
   const [selectedTools, setSelectedTools] = useState<string[]>([])
+  const [isMoreModalOpen, setIsMoreModalOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState("")
   const [isSaved, setIsSaved] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
-  
+  const [selectedDomain, setSelectedDomain] = useState("Gynecologist")
+  const [customDomain, setCustomDomain] = useState("")
+  const [isAddingCustomDomain, setIsAddingCustomDomain] = useState(false)
+  const [isStrictModeDropdownOpen, setIsStrictModeDropdownOpen] = useState(false)
+
   const { user, token, loading: authLoading } = useAuth()
   const router = useRouter()
+
+  const DOMAINS = ["Coding Assistant", "Data Science", "Gynecologist", "Math Tutor", "Web Agent"]
 
   // Progressive loading effect
   useEffect(() => {
@@ -115,14 +262,20 @@ export default function CreateAgentPage() {
     if (!description.trim()) return
     setIsGenerating(true)
     setSaveError("")
-    
+
+    // Consolidate the domain to use
+    const domainToUse = isAddingCustomDomain ? customDomain : selectedDomain;
+
     try {
       const response = await fetch('/api/forge-agent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt: description }),
+        body: JSON.stringify({
+          prompt: description,
+          domain: domainToUse
+        }),
       })
 
       const data = await response.json()
@@ -148,16 +301,16 @@ export default function CreateAgentPage() {
 
   const handleSaveAgent = async () => {
     if (!agentConfig) return
-    
+
     setIsSaving(true)
     setSaveError("")
     setSaveSuccess(false)
-    
+
     try {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json'
       }
-      
+
       if (token) {
         headers['Authorization'] = `Bearer ${token}`
       }
@@ -237,7 +390,7 @@ export default function CreateAgentPage() {
             <Card>
               <h2 className="text-2xl font-black mb-2">Describe Your AI Agent</h2>
               <p className="text-sm text-gray-600 mb-4">Use natural language to describe what kind of AI agent you want to create.</p>
-              
+
               <div className="mb-4">
                 <label className="block text-sm font-bold mb-2">Agent Name</label>
                 <input
@@ -248,7 +401,7 @@ export default function CreateAgentPage() {
                   className="w-full px-4 py-3 text-base border-[3px] border-black rounded-lg bg-white focus:outline-none focus:ring-4 focus:ring-[#FF7A00]/30 transition-all font-medium"
                 />
               </div>
-              
+
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -302,13 +455,13 @@ export default function CreateAgentPage() {
                 {isGenerating && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center h-[500px]">
                     <div className="relative mb-12">
-                      <motion.div 
-                        animate={{ rotate: 360 }} 
-                        transition={{ duration: 4, repeat: Infinity, ease: "linear" }} 
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                       >
                         <Sparkles className="w-24 h-24 text-[#FF7A00]" />
                       </motion.div>
-                      <motion.div 
+                      <motion.div
                         className="absolute inset-0 flex items-center justify-center"
                         animate={{ scale: [1, 1.2, 1] }}
                         transition={{ duration: 2, repeat: Infinity }}
@@ -369,12 +522,124 @@ export default function CreateAgentPage() {
                 )}
               </AnimatePresence>
             </Card>
+
+            {/* Strict Mode Modal/Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white border-[3px] border-black rounded-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-6 h-6 text-[#FF7A00]" />
+                  <h2 className="text-xl font-black">Strict Mode</h2>
+                </div>
+                <div className="px-2 py-1 bg-[#FF7A00] text-white text-[10px] font-black rounded uppercase">Manual Override</div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold mb-2">Select Domain Expertise</label>
+                  <div className="relative">
+                    <button
+                      onClick={() => setIsStrictModeDropdownOpen(!isStrictModeDropdownOpen)}
+                      className="w-full flex items-center justify-between px-4 py-3 text-base border-[3px] border-black rounded-lg bg-white focus:outline-none focus:ring-4 focus:ring-[#FF7A00]/30 transition-all font-bold cursor-pointer"
+                    >
+                      <span>{isAddingCustomDomain ? "Custom Domain" : selectedDomain}</span>
+                      <svg className={cn("w-4 h-4 transition-transform", isStrictModeDropdownOpen && "rotate-180")} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    <AnimatePresence>
+                      {isStrictModeDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          className="absolute left-0 right-0 mt-2 bg-[#FFF4E2] border-[3px] border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-2 z-50 max-h-60 overflow-y-auto"
+                        >
+                          <button
+                            onClick={() => {
+                              setIsAddingCustomDomain(true)
+                              setIsStrictModeDropdownOpen(false)
+                            }}
+                            className={cn(
+                              "w-full text-left px-3 py-2 mb-1 rounded-md font-bold text-sm text-[#FF7A00] hover:bg-[#FDF3B1] transition-colors border-b-2 border-black/5 pb-3 flex items-center gap-3"
+                            )}
+                          >
+                            <Plus className="w-5 h-5" />
+                            + Create New Domain...
+                          </button>
+                          <div className="font-bold text-xs text-gray-500 uppercase px-3 pt-2 pb-1">Available Domains</div>
+                          {DOMAINS.map(domain => (
+                            <button
+                              key={domain}
+                              onClick={() => {
+                                setIsAddingCustomDomain(false)
+                                setSelectedDomain(domain)
+                                setIsStrictModeDropdownOpen(false)
+                              }}
+                              className={cn(
+                                "w-full text-left px-3 py-2 rounded-md font-bold text-sm hover:bg-[#FDF3B1] transition-colors flex items-center gap-3",
+                                !isAddingCustomDomain && selectedDomain === domain && "bg-[#FDF3B1]"
+                              )}
+                            >
+                              <Sparkles className="w-5 h-5 text-[#FF7A00]" />
+                              {domain}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+
+                <AnimatePresence>
+                  {isAddingCustomDomain && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <label className="block text-sm font-bold mb-2">New Domain Name</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={customDomain}
+                          onChange={(e) => setCustomDomain(e.target.value)}
+                          placeholder="e.g., Quantum Physics Expert"
+                          className="flex-1 px-4 py-2 text-sm border-[3px] border-black rounded-lg bg-white focus:outline-none focus:ring-4 focus:ring-[#FF7A00]/30 transition-all font-medium"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            if (customDomain.trim()) {
+                              setSelectedDomain(customDomain.trim())
+                              setIsAddingCustomDomain(false)
+                              setCustomDomain("")
+                            }
+                          }}
+                        >
+                          Add
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <p className="text-xs text-gray-500 font-bold italic">
+                  * Strict Mode ensures the agent remains strictly within its designated domain.
+                </p>
+              </div>
+            </motion.div>
           </div>
 
           <div className="space-y-6">
             <Card>
               <h2 className="text-xl font-black mb-4">Agent Settings</h2>
-              
+
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
                   <Database className="w-4 h-4" />
@@ -382,13 +647,13 @@ export default function CreateAgentPage() {
                 </div>
                 <div className="grid grid-cols-1 gap-2">
                   {["stateless", "session", "persistent"].map((mode) => (
-                    <button 
-                      key={mode} 
-                      onClick={() => setMemoryMode(mode)} 
+                    <button
+                      key={mode}
+                      onClick={() => setMemoryMode(mode)}
                       className={cn(
-                        "w-full p-2.5 border-[3px] border-black rounded-lg font-bold text-left transition-all", 
-                        memoryMode === mode 
-                          ? "bg-[#FF7A00] text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" 
+                        "w-full p-2.5 border-[3px] border-black rounded-lg font-bold text-left transition-all",
+                        memoryMode === mode
+                          ? "bg-[#FF7A00] text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                           : "bg-[#FFF4E2] hover:translate-y-[-1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                       )}
                     >
@@ -404,13 +669,13 @@ export default function CreateAgentPage() {
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {["short", "medium", "long"].map((length) => (
-                    <button 
-                      key={length} 
-                      onClick={() => setResponseLength(length)} 
+                    <button
+                      key={length}
+                      onClick={() => setResponseLength(length)}
                       className={cn(
-                        "p-2 border-[3px] border-black rounded-lg font-bold text-center text-xs transition-all", 
-                        responseLength === length 
-                          ? "bg-[#FF7A00] text-white" 
+                        "p-2 border-[3px] border-black rounded-lg font-bold text-center text-xs transition-all",
+                        responseLength === length
+                          ? "bg-[#FF7A00] text-white"
                           : "bg-[#FFF4E2] hover:bg-white"
                       )}
                     >
@@ -434,49 +699,90 @@ export default function CreateAgentPage() {
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
                   <Zap className="w-4 h-4" />
-                  <h3 className="text-sm font-black">Agent Tools</h3>
+                  <h3 className="text-sm font-black">Integration</h3>
                 </div>
                 <div className="space-y-2">
                   {[
-                    "Web Search",
-                    "Visit URL",
-                    "Read File",
-                    "Send Email",
-                    "AWS MCP Docs"
+                    { name: "Read File", icon: <FileText className="w-5 h-5 text-gray-600" /> },
+                    { name: "Gmail", icon: "https://download.logo.wine/logo/Gmail/Gmail-Logo.wine.png" },
+                    { name: "Daytona", icon: "https://framerusercontent.com/images/eh4XDIID3RQ61pplgsVvLkwrnrk.svg?width=454&height=320" }
                   ].map((tool) => (
                     <button
-                      key={tool}
+                      key={tool.name}
                       onClick={() => {
-                        if (selectedTools.includes(tool)) {
-                          setSelectedTools(selectedTools.filter(t => t !== tool))
+                        if (selectedTools.includes(tool.name)) {
+                          setSelectedTools(selectedTools.filter(t => t !== tool.name))
                         } else {
-                          setSelectedTools([...selectedTools, tool])
+                          setSelectedTools([...selectedTools, tool.name])
                         }
                       }}
                       className={cn(
                         "w-full p-3 border-[3px] border-black rounded-lg font-bold flex items-center justify-between transition-all",
-                        selectedTools.includes(tool) ? "bg-[#FFD84D]" : "bg-white hover:bg-gray-50"
+                        selectedTools.includes(tool.name) ? "bg-[#FFD84D]" : "bg-white hover:bg-gray-100"
                       )}
                     >
-                      <span className="text-sm text-black">{tool}</span>
+                      <div className="flex items-center gap-3">
+                        {tool.icon && (
+                          typeof tool.icon === 'string' ? (
+                            <img src={tool.icon} alt={tool.name} className="w-5 h-5 object-contain" />
+                          ) : (
+                            tool.icon
+                          )
+                        )}
+                        <span className="text-sm text-black">{tool.name}</span>
+                      </div>
                       <div className={cn(
                         "w-5 h-5 rounded-md border-[2px] border-black flex items-center justify-center transition-all",
-                        selectedTools.includes(tool) ? "bg-black" : "bg-white"
+                        selectedTools.includes(tool.name) ? "bg-black" : "bg-white"
                       )}>
-                        {selectedTools.includes(tool) && (
+                        {selectedTools.includes(tool.name) && (
                           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         )}
                       </div>
                     </button>
                   ))}
+
+                  <button
+                    type="button"
+                    onClick={() => setIsMoreModalOpen(true)}
+                    className="w-full p-3 border-[3px] border-black rounded-lg font-bold flex items-center justify-between transition-all bg-[#FF7A00] text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                  >
+                    <span className="text-sm">+ More Options</span>
+                    <span className="text-xs font-bold">View All</span>
+                  </button>
+
+                  {selectedTools.filter(t => !["Google Search", "Read File", "Gmail", "Daytona"].includes(t)).length > 0 && (
+                    <div className="mt-3 pt-3 border-t-2 border-black/10">
+                      <div className="text-xs font-bold text-gray-500 mb-2 uppercase">Extra Active Integrations</div>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedTools
+                          .filter(t => !["Google Search", "Read File", "Gmail", "Daytona"].includes(t))
+                          .map(toolName => (
+                            <span
+                              key={toolName}
+                              className="px-2.5 py-1 bg-[#86EFAC] border-[2px] border-black rounded-lg text-xs font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1.5"
+                            >
+                              <span>{toolName}</span>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedTools(selectedTools.filter(t => t !== toolName))}
+                                className="hover:bg-black/10 rounded-full p-0.5"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </span>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </Card>
             <Card className="bg-[#5CC8FF]">
               <h3 className="text-lg font-black mb-4">Actions</h3>
-              
+
               {saveSuccess && (
                 <div className="p-3 bg-[#86EFAC] border-[3px] border-black rounded-lg mb-4 shadow-[4px_4px_0px_0px_rgba(34,197,94,1)] animate-pulse">
                   <p className="text-black font-bold text-sm flex items-center gap-2">
@@ -487,16 +793,16 @@ export default function CreateAgentPage() {
                   </p>
                 </div>
               )}
-              
+
               {saveError && (
                 <div className="p-3 bg-white border-[3px] border-red-500 rounded-lg mb-4 shadow-[4px_4px_0px_0px_rgba(239,68,68,1)]">
                   <p className="text-red-600 font-bold text-xs">{saveError}</p>
                 </div>
               )}
-              
+
               <div className="space-y-3">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className={cn(
                     "w-full bg-white",
                     !isSaved && "cursor-not-allowed opacity-50"
@@ -508,9 +814,9 @@ export default function CreateAgentPage() {
                   <TestTube className="w-4 h-4 mr-2" />
                   Test in Sandbox
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full bg-white" 
+                <Button
+                  variant="outline"
+                  className="w-full bg-white"
                   disabled={!agentConfig || isSaving}
                   onClick={handleSaveAgent}
                 >
@@ -522,6 +828,112 @@ export default function CreateAgentPage() {
           </div>
         </div>
       </div>
+
+      {/* More Tools Modal */}
+      <AnimatePresence>
+        {isMoreModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-[#FFF4E2] border-[3px] border-black p-6 md:p-8 rounded-xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full max-w-5xl max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-black text-black">More Tools & Integrations</h2>
+                  <p className="text-sm text-gray-600 mt-1">Select and integrate advanced capabilities for your AI agent.</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsMoreModalOpen(false)
+                    setSearchQuery("")
+                  }}
+                  className="bg-white border-[2px] border-black rounded-lg p-1.5 hover:bg-gray-100 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Search Bar */}
+              <div className="relative mb-6">
+                <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Search tools and integrations..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 text-base border-[3px] border-black rounded-lg bg-white focus:outline-none focus:ring-4 focus:ring-[#FF7A00]/30 transition-all font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                />
+              </div>
+
+              {/* Tools Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {MODAL_TOOLS.filter(tool =>
+                  tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  tool.description.toLowerCase().includes(searchQuery.toLowerCase())
+                ).map((tool) => {
+                  const isSelected = selectedTools.includes(tool.name)
+                  return (
+                    <button
+                      key={tool.name}
+                      onClick={() => {
+                        if (isSelected) {
+                          setSelectedTools(selectedTools.filter(t => t !== tool.name))
+                        } else {
+                          setSelectedTools([...selectedTools, tool.name])
+                        }
+                      }}
+                      className={cn(
+                        "p-4 border-[3px] border-black rounded-xl text-left flex items-start gap-4 transition-all duration-200 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]",
+                        isSelected ? "bg-[#FFD84D]" : "bg-white hover:bg-gray-100"
+                      )}
+                    >
+                      <div className="flex-shrink-0">{tool.icon}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-black text-base text-black truncate">{tool.name}</span>
+                          <div className={cn(
+                            "w-5 h-5 rounded-md border-[2px] border-black flex items-center justify-center flex-shrink-0 transition-all",
+                            isSelected ? "bg-black" : "bg-white"
+                          )}>
+                            {isSelected && (
+                              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-700 mt-1.5 leading-normal font-bold">{tool.description}</p>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div className="mt-8 pt-6 border-t-3 border-black flex justify-between items-center">
+                <div className="text-sm font-black text-black">
+                  {selectedTools.length} tool{selectedTools.length !== 1 ? 's' : ''} selected
+                </div>
+                <Button
+                  onClick={() => {
+                    setIsMoreModalOpen(false)
+                    setSearchQuery("")
+                  }}
+                  size="sm"
+                >
+                  Done
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
