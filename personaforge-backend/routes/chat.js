@@ -206,6 +206,10 @@ async function handleAgentRequest(agentId, message, sessionId, attachedFiles, mo
             : `\n\nNote: AgentMail is enabled for this agent, but the backend is missing AGENTMAIL_API_KEY. Explain that email actions are unavailable until AgentMail is configured, and do not pretend an inbox or email action succeeded.`;
     }
 
+    if (enabledTools.includes("GitHub MCP Server")) {
+        structuredMessage += `\n\nNote: You have access to the GitHub MCP Server. You can query GitHub for repos, issues, pull requests, stargazers, discussions, orgs, projects, and users.`;
+    }
+
     let reply = await chatWithPersona(systemPrompt, history, structuredMessage, enabledTools, model);
 
     if (detectGenericResponse(reply, domain)) {

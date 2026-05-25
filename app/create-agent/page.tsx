@@ -89,6 +89,19 @@ const MODAL_TOOLS: ModalTool[] = [
     )
   },
   {
+    name: "GitHub MCP Server",
+    description: "Access context, copilot spaces, actions, security, dependabot, gists, issues, PRs, and repos directly from GitHub.",
+    icon: (
+      <div className="w-10 h-10 rounded-lg bg-gray-100 border-2 border-black flex items-center justify-center p-1">
+        <img
+          src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+          alt="GitHub MCP"
+          className="w-full h-full object-contain"
+        />
+      </div>
+    )
+  },
+  {
     name: "Datadog",
     description: "Develop, evaluate, and monitor LLM applications",
     icon: (
@@ -705,7 +718,8 @@ export default function CreateAgentPage() {
                   {[
                     { name: "Read File", icon: <FileText className="w-5 h-5 text-gray-600" /> },
                     { name: "Gmail", icon: "https://download.logo.wine/logo/Gmail/Gmail-Logo.wine.png" },
-                    { name: "Daytona", icon: "https://framerusercontent.com/images/eh4XDIID3RQ61pplgsVvLkwrnrk.svg?width=454&height=320" }
+                    { name: "Daytona", icon: "https://framerusercontent.com/images/eh4XDIID3RQ61pplgsVvLkwrnrk.svg?width=454&height=320" },
+                    { name: "GitHub MCP Server", icon: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" }
                   ].map((tool) => (
                     <button
                       key={tool.name}
@@ -753,12 +767,12 @@ export default function CreateAgentPage() {
                     <span className="text-xs font-bold">View All</span>
                   </button>
 
-                  {selectedTools.filter(t => !["Google Search", "Read File", "Gmail", "Daytona"].includes(t)).length > 0 && (
+                  {selectedTools.filter(t => !["Google Search", "Read File", "Gmail", "Daytona", "GitHub MCP Server"].includes(t)).length > 0 && (
                     <div className="mt-3 pt-3 border-t-2 border-black/10">
                       <div className="text-xs font-bold text-gray-500 mb-2 uppercase">Extra Active Integrations</div>
                       <div className="flex flex-wrap gap-2">
                         {selectedTools
-                          .filter(t => !["Google Search", "Read File", "Gmail", "Daytona"].includes(t))
+                          .filter(t => !["Google Search", "Read File", "Gmail", "Daytona", "GitHub MCP Server"].includes(t))
                           .map(toolName => (
                             <span
                               key={toolName}
