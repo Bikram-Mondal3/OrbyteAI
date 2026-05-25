@@ -95,9 +95,9 @@ const MODAL_TOOLS: ModalTool[] = [
     icon: (
       <div className="w-10 h-10 rounded-lg bg-white border-2 border-black flex items-center justify-center overflow-hidden p-1">
         <img
-          src="https://framerusercontent.com/images/eh4XDIID3RQ61pplgsVvLkwrnrk.svg?width=454&height=320"
+          src="https://pbs.twimg.com/profile_images/1764766523770494977/NwdtuoVp_400x400.jpg"
           alt="Daytona"
-          className="w-full h-full object-contain"
+          className="w-full h-full object-contain rounded-md"
         />
       </div>
     )
@@ -158,7 +158,18 @@ export default function CreateAgentPage() {
   const { user, token, loading: authLoading } = useAuth()
   const router = useRouter()
 
-  const DOMAINS = ["Coding Assistant", "Data Science", "Gynecologist", "Math Tutor", "Web Agent"]
+  const DOMAINS = [
+    "Coding Assistant",
+    "Data Science",
+    "Web Developer",
+    "DevOps Engineer",
+    "Product Manager",
+    "Math Tutor",
+    "Cybersecurity Expert",
+    "UI/UX Designer",
+    "Technical Writer",
+    "Gynecologist"
+  ]
 
   // Progressive loading effect
   useEffect(() => {
@@ -504,7 +515,7 @@ export default function CreateAgentPage() {
                             )}
                           >
                             <Plus className="w-5 h-5" />
-                            + Create New Domain...
+                            Create New Domain...
                           </button>
                           <div className="font-bold text-xs text-gray-500 uppercase px-3 pt-2 pb-1">Available Domains</div>
                           {DOMAINS.map(domain => (
@@ -639,8 +650,7 @@ export default function CreateAgentPage() {
                 <div className="space-y-2">
                   {[
                     { name: "Read File", icon: <FileText className="w-5 h-5 text-gray-600" /> },
-                    { name: "Gmail", icon: "https://download.logo.wine/logo/Gmail/Gmail-Logo.wine.png" },
-                    { name: "Daytona", icon: "https://framerusercontent.com/images/eh4XDIID3RQ61pplgsVvLkwrnrk.svg?width=454&height=320" },
+                    { name: "Daytona", icon: "https://pbs.twimg.com/profile_images/1764766523770494977/NwdtuoVp_400x400.jpg" },
                     { name: "GitHub MCP Server", icon: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" }
                   ].map((tool) => (
                     <button
@@ -685,16 +695,17 @@ export default function CreateAgentPage() {
                     onClick={() => setIsMoreModalOpen(true)}
                     className="w-full p-3 border-[3px] border-black rounded-lg font-bold flex items-center justify-between transition-all bg-[#FF7A00] text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                   >
-                    <span className="text-sm">+ More Options</span>
+                    <Plus className="w-5 h-5" />
+                    <span className="text-sm"> More Options</span>
                     <span className="text-xs font-bold">View All</span>
                   </button>
 
-                  {selectedTools.filter(t => !["Google Search", "Read File", "Gmail", "Daytona", "GitHub MCP Server"].includes(t)).length > 0 && (
+                  {selectedTools.filter(t => !["Google Search", "Read File", "Daytona", "GitHub MCP Server"].includes(t)).length > 0 && (
                     <div className="mt-3 pt-3 border-t-2 border-black/10">
                       <div className="text-xs font-bold text-gray-500 mb-2 uppercase">Extra Active Integrations</div>
                       <div className="flex flex-wrap gap-2">
                         {selectedTools
-                          .filter(t => !["Google Search", "Read File", "Gmail", "Daytona", "GitHub MCP Server"].includes(t))
+                          .filter(t => !["Google Search", "Read File", "Daytona", "GitHub MCP Server"].includes(t))
                           .map(toolName => (
                             <span
                               key={toolName}
