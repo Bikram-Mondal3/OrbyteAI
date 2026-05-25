@@ -9,6 +9,7 @@ import { getAgentById } from '../services/agentStore.js';
 import { performWebSearch } from '../services/searchAgent.js';
 import { readFileContent } from '../services/readFileTool.js';
 import { isAgentMailConfigured } from '../services/agentMailToolset.js';
+import { isElevenLabsConfigured } from '../services/elevenLabsMcpToolset.js';
 
 const router = Router();
 
@@ -208,6 +209,12 @@ async function handleAgentRequest(agentId, message, sessionId, attachedFiles, mo
 
     if (enabledTools.includes("GitHub MCP Server")) {
         structuredMessage += `\n\nNote: You have access to the GitHub MCP Server. You can query GitHub for repos, issues, pull requests, stargazers, discussions, orgs, projects, and users.`;
+    }
+
+    if (enabledTools.includes("ElevenLabs")) {
+        structuredMessage += isElevenLabsConfigured()
+            ? `\n\nNote: You have access to the ElevenLabs MCP Server. You can generate speech from text, clone voices, process audio, create sound effects, and transcribe audio. Use these tools when audio generation or voice services are requested.`
+            : `\n\nNote: ElevenLabs is enabled for this agent, but the backend is missing ELEVENLABS_API_KEY. Explain that audio features are unavailable.`;
     }
 
     let reply = await chatWithPersona(systemPrompt, history, structuredMessage, enabledTools, model);

@@ -3,6 +3,7 @@ import { readFileTool } from "./readFileTool.js";
 import { getMcpToolsAsAdkTools, TOOL_NAME_MAP } from "./mcpBridge.js";
 import { createAgentMailToolset, isAgentMailConfigured } from "./agentMailToolset.js";
 import { createGithubMcpToolset, isGithubMcpConfigured } from "./githubMcpToolset.js";
+import { createElevenLabsToolset, isElevenLabsConfigured } from "./elevenLabsMcpToolset.js";
 import ModelClient, { isUnexpected } from "@azure-rest/ai-inference";
 import { AzureKeyCredential } from "@azure/core-auth";
 import dotenv from "dotenv";
@@ -324,12 +325,16 @@ export async function chatWithPersona(systemPrompt, history, userMessage, enable
                 if (enabledTools.includes("GitHub MCP Server") && isGithubMcpConfigured()) {
                     tools.push(createGithubMcpToolset());
                 }
+                if (enabledTools.includes("ElevenLabs") && isElevenLabsConfigured()) {
+                    tools.push(createElevenLabsToolset());
+                }
             } catch (mcpError) {
                 console.error("[Chat] MCP Tool loading failed, using native fallbacks:", mcpError.message);
                 if (enabledTools.includes("Read File")) tools.push(readFileTool);
                 if (enabledTools.includes("Google Search")) tools.push(GOOGLE_SEARCH);
                 if (enabledTools.includes("AgentMail") && isAgentMailConfigured()) tools.push(createAgentMailToolset());
                 if (enabledTools.includes("GitHub MCP Server") && isGithubMcpConfigured()) tools.push(createGithubMcpToolset());
+                if (enabledTools.includes("ElevenLabs") && isElevenLabsConfigured()) tools.push(createElevenLabsToolset());
             }
 
             const agent = createPersonaAgent({
