@@ -94,6 +94,8 @@ function normalizeModelSelection(model) {
         "Gemini 2.5 Flash": GEMINI_MODEL,
         "Grok: Llama 3.3 80b versatile": GROQ_LLAMA_MODEL,
         "Grok: Llama 3.3 80b": GROQ_LLAMA_MODEL,
+        "Groq: llama 3.3 80b": GROQ_LLAMA_MODEL,
+        "Groq: Llama 3.3 80b": GROQ_LLAMA_MODEL,
         "DeepSeek-V3": "deepseek/DeepSeek-V3-0324",
         "OpenAI GPT-4o": "openai/gpt-4o",
         "Gemini 3.1 Pro": GEMINI_3_1_PRO_MODEL,

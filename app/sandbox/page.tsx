@@ -940,7 +940,7 @@ export default function SandboxPage() {
                       className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FFF4E2] border-[3px] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-[#FDF3B1] transition-all"
                     >
                       <AtSign className="w-5 h-5" />
-                      <span className="font-bold text-sm">{selectedModel}</span>
+                      <span className="font-bold text-sm">@{selectedModel}</span>
                     </button>
                     <AnimatePresence>
                       {isModelDropdownOpen && (
@@ -952,21 +952,21 @@ export default function SandboxPage() {
                         >
                           <div className="font-bold text-xs text-gray-500 uppercase px-3 pt-2 pb-1">Reasoning Models</div>
                           <button
-                            onClick={() => { setSelectedModel("deepseek/DeepSeek-V3-0324"); setIsModelDropdownOpen(false); }}
+                            onClick={() => { setSelectedModel("DeepSeek-V3"); setIsModelDropdownOpen(false); }}
                             className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
                           >
                             <img src="https://img.icons8.com/color/512/deepseek.png" alt="DeepSeek" className="w-5 h-5 rounded-full" />
                             DeepSeek-V3
                           </button>
                           <button
-                            onClick={() => { setSelectedModel("qwen-coder"); setIsModelDropdownOpen(false); }}
+                            onClick={() => { setSelectedModel("Qwen3 Coder 30B"); setIsModelDropdownOpen(false); }}
                             className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
                           >
                             <img src="https://qwenlm.github.io/img/logo.png" alt="Qwen" className="w-5 h-5 rounded-full" />
                             Qwen3 Coder 30B
                           </button>
                           <button
-                            onClick={() => { setSelectedModel("kimi"); setIsModelDropdownOpen(false); }}
+                            onClick={() => { setSelectedModel("Moonshot Kimi K2.5"); setIsModelDropdownOpen(false); }}
                             className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
                           >
                             <img src="https://aimode.co/wp-content/uploads/2025/03/Kimi-AI-Logo.webp" alt="Kimi" className="w-5 h-5 rounded-full" />
@@ -982,14 +982,14 @@ export default function SandboxPage() {
                             Gemini 2.5 Flash
                           </button>
                           <button
-                            onClick={() => { setSelectedModel("claude-fast"); setIsModelDropdownOpen(false); }}
+                            onClick={() => { setSelectedModel("Claude Haiku 4.5"); setIsModelDropdownOpen(false); }}
                             className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
                           >
                             <img src="https://woopt.modeltheme.com/wp-content/uploads/2025/07/04claude.png" alt="Claude" className="w-5 h-5 rounded-full" />
                             Claude Haiku 4.5
                           </button>
                           <button
-                            onClick={() => { setSelectedModel("openai/gpt-4o"); setIsModelDropdownOpen(false); }}
+                            onClick={() => { setSelectedModel("OpenAI GPT-4o"); setIsModelDropdownOpen(false); }}
                             className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
                           >
                             <img src="https://static.vecteezy.com/system/resources/previews/022/227/364/non_2x/openai-chatgpt-logo-icon-free-png.png" alt="OpenAI" className="w-5 h-5 rounded-full" />
@@ -998,40 +998,27 @@ export default function SandboxPage() {
 
                           <div className="font-bold text-xs text-gray-500 uppercase px-3 pt-2 pb-1">General Chat</div>
                           <button
-                            onClick={() => { setSelectedModel("Grok: Llama 3.3 80b versatile"); setIsModelDropdownOpen(false); }}
+                            onClick={() => { setSelectedModel("Groq: llama 3.3 80b"); setIsModelDropdownOpen(false); }}
                             className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
                           >
                             <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHVsO5kFrri_uqZdlB6mACC2bdyyy6D0bYag&s" alt="Groq" className="w-5 h-5 rounded-full" />
-                            Grok: Llama 3.3 80b
+                            Groq: llama 3.3 80b
                           </button>
                           <button
-                            onClick={() => { setSelectedModel("gemini-large"); setIsModelDropdownOpen(false); }}
+                            onClick={() => { setSelectedModel("Gemini 3.1 Pro"); setIsModelDropdownOpen(false); }}
                             className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
                           >
                             <img src="https://static.vecteezy.com/system/resources/previews/055/687/065/non_2x/gemini-google-icon-symbol-logo-free-png.png" alt="Gemini" className="w-5 h-5 rounded-full" />
                             Gemini 3.1 Pro
                           </button>
                           <button
-                            onClick={() => { setSelectedModel("glm"); setIsModelDropdownOpen(false); }}
+                            onClick={() => { setSelectedModel("Z.ai GLM-5.1"); setIsModelDropdownOpen(false); }}
                             className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
                           >
                             <img src="https://pbs.twimg.com/profile_images/1970775077181411328/W8XKaUIh_400x400.jpg" alt="Z.ai" className="w-5 h-5 rounded-full" />
                             Z.ai GLM-5.1
                           </button>
-                          <button
-                            onClick={() => { setSelectedModel("kimi"); setIsModelDropdownOpen(false); }}
-                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
-                          >
-                            <img src="https://aimode.co/wp-content/uploads/2025/03/Kimi-AI-Logo.webp" alt="Kimi" className="w-5 h-5 rounded-full" />
-                            Moonshot Kimi K2.5
-                          </button>
-                          <button
-                            onClick={() => { setSelectedModel("claude-fast"); setIsModelDropdownOpen(false); }}
-                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
-                          >
-                            <img src="https://woopt.modeltheme.com/wp-content/uploads/2025/07/04claude.png" alt="Claude" className="w-5 h-5 rounded-full" />
-                            Claude Haiku 4.5
-                          </button>
+
 
                         </motion.div>
                       )}
