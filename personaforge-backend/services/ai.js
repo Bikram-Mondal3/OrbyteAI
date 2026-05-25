@@ -5,6 +5,7 @@ import { createAgentMailToolset, isAgentMailConfigured } from "./agentMailToolse
 import { createGithubMcpToolset, isGithubMcpConfigured } from "./githubMcpToolset.js";
 import { createElevenLabsToolset, isElevenLabsConfigured } from "./elevenLabsMcpToolset.js";
 import { createNotionToolset, isNotionConfigured } from "./notionMcpToolset.js";
+import { createPostmanToolset, isPostmanConfigured } from "./postmanMcpToolset.js";
 import ModelClient, { isUnexpected } from "@azure-rest/ai-inference";
 import { AzureKeyCredential } from "@azure/core-auth";
 import dotenv from "dotenv";
@@ -332,6 +333,9 @@ export async function chatWithPersona(systemPrompt, history, userMessage, enable
                 if (enabledTools.includes("Notion") && isNotionConfigured()) {
                     tools.push(createNotionToolset());
                 }
+                if (enabledTools.includes("Postman") && isPostmanConfigured()) {
+                    tools.push(createPostmanToolset());
+                }
             } catch (mcpError) {
                 console.error("[Chat] MCP Tool loading failed, using native fallbacks:", mcpError.message);
                 if (enabledTools.includes("Read File")) tools.push(readFileTool);
@@ -340,6 +344,7 @@ export async function chatWithPersona(systemPrompt, history, userMessage, enable
                 if (enabledTools.includes("GitHub MCP Server") && isGithubMcpConfigured()) tools.push(createGithubMcpToolset());
                 if (enabledTools.includes("ElevenLabs") && isElevenLabsConfigured()) tools.push(createElevenLabsToolset());
                 if (enabledTools.includes("Notion") && isNotionConfigured()) tools.push(createNotionToolset());
+                if (enabledTools.includes("Postman") && isPostmanConfigured()) tools.push(createPostmanToolset());
             }
 
             const agent = createPersonaAgent({

@@ -11,6 +11,7 @@ import { readFileContent } from '../services/readFileTool.js';
 import { isAgentMailConfigured } from '../services/agentMailToolset.js';
 import { isElevenLabsConfigured } from '../services/elevenLabsMcpToolset.js';
 import { isNotionConfigured } from '../services/notionMcpToolset.js';
+import { isPostmanConfigured } from '../services/postmanMcpToolset.js';
 
 const router = Router();
 
@@ -222,6 +223,12 @@ async function handleAgentRequest(agentId, message, sessionId, attachedFiles, mo
         structuredMessage += isNotionConfigured()
             ? `\n\nNote: You have access to the Notion MCP Server. You can search workspace pages, create content, manage tasks/databases, update Notion documents and retrieve team/user information using the provided tools.`
             : `\n\nNote: Notion MCP is enabled for this agent, but the backend is missing NOTION_TOKEN in its environment variables. Explain that Notion access is unavailable until this is configured.`;
+    }
+
+    if (enabledTools.includes("Postman")) {
+        structuredMessage += isPostmanConfigured()
+            ? `\n\nNote: You have access to the Postman MCP Server. You can manage API collections, workspaces, environments, and perform API testing. Use these tools when API lifecycle management is requested.`
+            : `\n\nNote: Postman MCP is enabled for this agent, but the backend is missing POSTMAN_API_KEY in its environment variables. Explain that Postman access is unavailable until this is configured.`;
     }
 
     let reply = await chatWithPersona(systemPrompt, history, structuredMessage, enabledTools, model);

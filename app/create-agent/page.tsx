@@ -165,6 +165,15 @@ const MODAL_TOOLS: ModalTool[] = [
     )
   },
   {
+    name: "Postman",
+    description: "Connect to Postman ecosystem to manage collections, APIs, and workflows",
+    icon: (
+      <div className="w-10 h-10 rounded-lg bg-[#FF6C37] border-2 border-black flex items-center justify-center">
+        <span className="text-xl font-bold text-white font-sans">P</span>
+      </div>
+    )
+  },
+  {
     name: "Environment Toolset",
     description: "Create local and custom compute environments for files, scripts, and code execution",
     icon: (
