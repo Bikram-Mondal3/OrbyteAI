@@ -26,6 +26,8 @@ import {
   Check,
   Copy,
   AtSign,
+  Image,
+  Download,
   Globe,
   Trash2,
   Send,
@@ -165,6 +167,7 @@ interface Message {
   type: "user" | "ai"
   content: string
   timestamp: string
+  imageUrl?: string
 }
 
 interface LogEntry {
@@ -179,6 +182,11 @@ interface UploadedFile {
   file_path: string
   size_bytes: number
 }
+
+const IMAGE_MODELS = [
+  { label: "Flux Schnell", value: "flux" },
+  { label: "FLUX.2 Klein 4B", value: "klein" }
+]
 
 export default function SandboxPage() {
   const { token } = useAuth()
@@ -199,9 +207,11 @@ export default function SandboxPage() {
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null)
   const [isLoadingAgentId, setIsLoadingAgentId] = useState(false)
   const [selectedModel, setSelectedModel] = useState("Gemini 2.5 Flash")
+  const [previousChatModel, setPreviousChatModel] = useState("Gemini 2.5 Flash")
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false)
   const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false)
   const [isSearchEnabled, setIsSearchEnabled] = useState(false)
+  const [isImageMode, setIsImageMode] = useState(false)
 
   // Auto-resize textarea
   useEffect(() => {
@@ -220,8 +230,12 @@ export default function SandboxPage() {
     guardrails: ["stayOnTopic", "noHarmfulContent"],
     tools: [] as string[]
   })
-  const [isEditingConfig, setIsEditingConfig] = useState(false)
   const [editConfigForm, setEditConfigForm] = useState(config)
+  const [isEditingConfig, setIsEditingConfig] = useState(false)
+  useEffect(() => {
+    setEditConfigForm(config)
+  }, [config])
+
   const canReadFiles = (config.tools || []).includes("Read File")
   const domainLabel = (config.expertise || "").trim() || "this domain"
   const domainLabelLower = domainLabel.toLowerCase()
@@ -229,6 +243,32 @@ export default function SandboxPage() {
   const fileReadStatusMessage = usesGeminiToolRuntime
     ? "Read File enabled"
     : "Read File enabled via server load"
+
+  const selectedImageModel = IMAGE_MODELS.find(model => model.label === selectedModel) || IMAGE_MODELS[0]
+
+  const handleToggleSearchMode = () => {
+    if (isImageMode) {
+      setIsImageMode(false)
+      setSelectedModel(previousChatModel)
+    }
+
+    setIsSearchEnabled(prev => !prev)
+  }
+
+  const handleToggleImageMode = () => {
+    setIsModelDropdownOpen(false)
+
+    if (isImageMode) {
+      setIsImageMode(false)
+      setSelectedModel(previousChatModel)
+      return
+    }
+
+    setPreviousChatModel(selectedModel)
+    setSelectedModel(IMAGE_MODELS[0].label)
+    setIsImageMode(true)
+    setIsSearchEnabled(false)
+  }
 
   useEffect(() => {
     setMounted(true)
@@ -398,7 +438,77 @@ export default function SandboxPage() {
     }
   }
 
+  const handleGenerateImage = async () => {
+    const promptText = inputValue.trim()
+    if (!promptText || isTyping) return
+
+    const userMessage: Message = {
+      id: Date.now() + Math.random(),
+      type: "user",
+      content: promptText,
+      timestamp: new Date().toLocaleTimeString()
+    }
+
+    setMessages(prev => [...prev, userMessage])
+    setInputValue("")
+    setIsTyping(true)
+
+    setLogs(prev => [
+      ...prev,
+      { id: Date.now() + Math.random(), type: "info", message: `Generating image with ${selectedModel}`, timestamp: new Date().toLocaleTimeString() }
+    ])
+
+    try {
+      const res = await fetch('/api/image-generation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: promptText,
+          model: selectedImageModel.value
+        })
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null)
+        throw new Error(errorData?.error || `HTTP Error: ${res.status}`)
+      }
+
+      const blob = await res.blob()
+      const imageUrl = URL.createObjectURL(blob)
+
+      const aiMessage: Message = {
+        id: Date.now() + Math.random(),
+        type: "ai",
+        content: `Generated with ${selectedModel}`,
+        timestamp: new Date().toLocaleTimeString(),
+        imageUrl
+      }
+
+      setMessages(prev => [...prev, aiMessage])
+      setLogs(prev => [
+        ...prev,
+        { id: Date.now() + Math.random(), type: "success", message: `Image generated with ${selectedModel}`, timestamp: new Date().toLocaleTimeString() }
+      ])
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to generate image"
+      setMessages(prev => [...prev, { id: Date.now() + Math.random(), type: "ai", content: errorMessage, timestamp: new Date().toLocaleTimeString() }])
+      setLogs(prev => [
+        ...prev,
+        { id: Date.now() + Math.random(), type: "warning", message: errorMessage, timestamp: new Date().toLocaleTimeString() }
+      ])
+    } finally {
+      setIsTyping(false)
+    }
+  }
+
   const handleSend = async () => {
+    if (isTyping) return
+
+    if (isImageMode) {
+      await handleGenerateImage()
+      return
+    }
+
     if (!inputValue.trim()) return
 
     const messageText = inputValue
@@ -804,18 +914,40 @@ export default function SandboxPage() {
                     </div>
                     <div className="font-medium text-sm space-y-2 whitespace-pre-wrap">
                       {message.type === "ai" ? (
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          components={{
-                            ul: ({ node, ...props }) => <ul className="list-disc pl-5 my-2" {...props} />,
-                            ol: ({ node, ...props }) => <ol className="list-decimal pl-5 my-2" {...props} />,
-                            li: ({ node, ...props }) => <li className="mb-1 marker:text-black marker:font-bold" {...props} />,
-                            p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
-                            strong: ({ node, ...props }) => <strong className="font-black" {...props} />
-                          }}
-                        >
-                          {message.content}
-                        </ReactMarkdown>
+                        <>
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              ul: ({ node, ...props }) => <ul className="list-disc pl-5 my-2" {...props} />,
+                              ol: ({ node, ...props }) => <ol className="list-decimal pl-5 my-2" {...props} />,
+                              li: ({ node, ...props }) => <li className="mb-1 marker:text-black marker:font-bold" {...props} />,
+                              p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                              strong: ({ node, ...props }) => <strong className="font-black" {...props} />
+                            }}
+                          >
+                            {message.content}
+                          </ReactMarkdown>
+                          {message.imageUrl && (
+                            <div className="group relative mt-3 w-full max-w-2xl">
+                              <img
+                                src={message.imageUrl}
+                                alt={message.content}
+                                className="block w-full rounded-xl border-[3px] border-black bg-white"
+                              />
+                              <a
+                                href={message.imageUrl}
+                                download={`sandbox-image-${message.id}.png`}
+                                target="_blank"
+                                rel="noreferrer"
+                                aria-label="Download generated image"
+                                title="Download generated image"
+                                className="absolute right-3 top-3 inline-flex items-center justify-center rounded-lg border-[2px] border-black bg-white/95 p-2 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-[#FFF4E2] hover:translate-x-[1px] hover:translate-y-[1px]"
+                              >
+                                <Download className="h-4 w-4" />
+                              </a>
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <p>{message.content}</p>
                       )}
@@ -889,7 +1021,7 @@ export default function SandboxPage() {
                 )}
 
                 <AnimatePresence>
-                  {selectedModel !== "Gemini 2.5 Flash" && (
+                  {!isImageMode && selectedModel !== "Gemini 2.5 Flash" && (
                     <motion.div
                       initial={{ x: "100%" }}
                       animate={{ x: 0 }}
@@ -928,13 +1060,13 @@ export default function SandboxPage() {
                   {/* Input Area */}
                   <textarea
                     ref={textareaRef}
-                    placeholder={isSearchEnabled ? "Search the web with Gemini 2.5 Flash..." : `Ask ${config?.name || 'anything'}...`}
+                    placeholder={isImageMode ? `Describe the image for ${selectedModel}...` : isSearchEnabled ? "Search the web with Gemini 2.5 Flash..." : `Ask ${config?.name || 'anything'}...`}
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
-                        if (inputValue.trim() || uploadedFiles.length > 0) {
+                        if (isImageMode ? inputValue.trim() : (inputValue.trim() || uploadedFiles.length > 0)) {
                           handleSend();
                         }
                       }
@@ -963,67 +1095,91 @@ export default function SandboxPage() {
                           exit={{ opacity: 0, y: -10 }}
                           className="absolute bottom-full mb-2 w-64 bg-[#FFF4E2] border-[3px] border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-2 z-20 max-h-60 overflow-y-auto model-dropdown"
                         >
-                          <div className="font-bold text-xs text-gray-500 uppercase px-3 pt-2 pb-1">Reasoning Models</div>
-                          <button
-                            onClick={() => { setSelectedModel("DeepSeek-V3"); setIsModelDropdownOpen(false); }}
-                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
-                          >
-                            <img src="https://img.icons8.com/color/512/deepseek.png" alt="DeepSeek" className="w-5 h-5 rounded-full" />
-                            DeepSeek-V3
-                          </button>
-                          <button
-                            onClick={() => { setSelectedModel("Qwen3 Coder 30B"); setIsModelDropdownOpen(false); }}
-                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
-                          >
-                            <img src="https://qwenlm.github.io/img/logo.png" alt="Qwen" className="w-5 h-5 rounded-full" />
-                            Qwen3 Coder 30B
-                          </button>
-                          <button
-                            onClick={() => { setSelectedModel("Moonshot Kimi K2.5"); setIsModelDropdownOpen(false); }}
-                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
-                          >
-                            <img src="https://aimode.co/wp-content/uploads/2025/03/Kimi-AI-Logo.webp" alt="Kimi" className="w-5 h-5 rounded-full" />
-                            Moonshot Kimi K2.5
-                          </button>
+                          {isImageMode ? (
+                            <>
+                              <div className="font-bold text-xs text-gray-500 uppercase px-3 pt-2 pb-1">Image Models</div>
+                              {IMAGE_MODELS.map((model) => (
+                                <button
+                                  key={model.value}
+                                  onClick={() => {
+                                    setSelectedModel(model.label)
+                                    setIsModelDropdownOpen(false)
+                                  }}
+                                  className={cn(
+                                    "w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3",
+                                    selectedModel === model.label && "bg-[#FDF3B1]"
+                                  )}
+                                >
+                                  <Image className="w-5 h-5 rounded-full" />
+                                  {model.label}
+                                </button>
+                              ))}
+                            </>
+                          ) : (
+                            <>
+                              <div className="font-bold text-xs text-gray-500 uppercase px-3 pt-2 pb-1">Reasoning Models</div>
+                              <button
+                                onClick={() => { setSelectedModel("DeepSeek-V3"); setIsModelDropdownOpen(false); }}
+                                className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                              >
+                                <img src="https://img.icons8.com/color/512/deepseek.png" alt="DeepSeek" className="w-5 h-5 rounded-full" />
+                                DeepSeek-V3
+                              </button>
+                              <button
+                                onClick={() => { setSelectedModel("Qwen3 Coder 30B"); setIsModelDropdownOpen(false); }}
+                                className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                              >
+                                <img src="https://qwenlm.github.io/img/logo.png" alt="Qwen" className="w-5 h-5 rounded-full" />
+                                Qwen3 Coder 30B
+                              </button>
+                              <button
+                                onClick={() => { setSelectedModel("Moonshot Kimi K2.5"); setIsModelDropdownOpen(false); }}
+                                className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                              >
+                                <img src="https://aimode.co/wp-content/uploads/2025/03/Kimi-AI-Logo.webp" alt="Kimi" className="w-5 h-5 rounded-full" />
+                                Moonshot Kimi K2.5
+                              </button>
 
-                          <div className="font-bold text-xs text-gray-500 uppercase px-3 pt-2 pb-1">Fast Models</div>
-                          <button
-                            onClick={() => { setSelectedModel("Gemini 2.5 Flash"); setIsModelDropdownOpen(false); }}
-                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
-                          >
-                            <img src="https://static.vecteezy.com/system/resources/previews/055/687/065/non_2x/gemini-google-icon-symbol-logo-free-png.png" alt="Gemini" className="w-5 h-5 rounded-full" />
-                            Gemini 2.5 Flash
-                          </button>
-                          <button
-                            onClick={() => { setSelectedModel("Claude Haiku 4.5"); setIsModelDropdownOpen(false); }}
-                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
-                          >
-                            <img src="https://woopt.modeltheme.com/wp-content/uploads/2025/07/04claude.png" alt="Claude" className="w-5 h-5 rounded-full" />
-                            Claude Haiku 4.5
-                          </button>
-                          <button
-                            onClick={() => { setSelectedModel("OpenAI GPT-4o"); setIsModelDropdownOpen(false); }}
-                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
-                          >
-                            <img src="https://static.vecteezy.com/system/resources/previews/022/227/364/non_2x/openai-chatgpt-logo-icon-free-png.png" alt="OpenAI" className="w-5 h-5 rounded-full" />
-                            OpenAI GPT-4o
-                          </button>
+                              <div className="font-bold text-xs text-gray-500 uppercase px-3 pt-2 pb-1">Fast Models</div>
+                              <button
+                                onClick={() => { setSelectedModel("Gemini 2.5 Flash"); setIsModelDropdownOpen(false); }}
+                                className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                              >
+                                <img src="https://static.vecteezy.com/system/resources/previews/055/687/065/non_2x/gemini-google-icon-symbol-logo-free-png.png" alt="Gemini" className="w-5 h-5 rounded-full" />
+                                Gemini 2.5 Flash
+                              </button>
+                              <button
+                                onClick={() => { setSelectedModel("Claude Haiku 4.5"); setIsModelDropdownOpen(false); }}
+                                className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                              >
+                                <img src="https://woopt.modeltheme.com/wp-content/uploads/2025/07/04claude.png" alt="Claude" className="w-5 h-5 rounded-full" />
+                                Claude Haiku 4.5
+                              </button>
+                              <button
+                                onClick={() => { setSelectedModel("OpenAI GPT-4o"); setIsModelDropdownOpen(false); }}
+                                className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                              >
+                                <img src="https://static.vecteezy.com/system/resources/previews/022/227/364/non_2x/openai-chatgpt-logo-icon-free-png.png" alt="OpenAI" className="w-5 h-5 rounded-full" />
+                                OpenAI GPT-4o
+                              </button>
 
-                          <div className="font-bold text-xs text-gray-500 uppercase px-3 pt-2 pb-1">General Chat</div>
-                          <button
-                            onClick={() => { setSelectedModel("Groq: llama 3.3 80b"); setIsModelDropdownOpen(false); }}
-                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
-                          >
-                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHVsO5kFrri_uqZdlB6mACC2bdyyy6D0bYag&s" alt="Groq" className="w-5 h-5 rounded-full" />
-                            Groq: llama 3.3 80b
-                          </button>
-                          <button
-                            onClick={() => { setSelectedModel("Z.ai GLM-5.1"); setIsModelDropdownOpen(false); }}
-                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
-                          >
-                            <img src="https://pbs.twimg.com/profile_images/1970775077181411328/W8XKaUIh_400x400.jpg" alt="Z.ai" className="w-5 h-5 rounded-full" />
-                            Z.ai GLM-5.1
-                          </button>
+                              <div className="font-bold text-xs text-gray-500 uppercase px-3 pt-2 pb-1">General Chat</div>
+                              <button
+                                onClick={() => { setSelectedModel("Groq: llama 3.3 80b"); setIsModelDropdownOpen(false); }}
+                                className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                              >
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHVsO5kFrri_uqZdlB6mACC2bdyyy6D0bYag&s" alt="Groq" className="w-5 h-5 rounded-full" />
+                                Groq: llama 3.3 80b
+                              </button>
+                              <button
+                                onClick={() => { setSelectedModel("Z.ai GLM-5.1"); setIsModelDropdownOpen(false); }}
+                                className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
+                              >
+                                <img src="https://pbs.twimg.com/profile_images/1970775077181411328/W8XKaUIh_400x400.jpg" alt="Z.ai" className="w-5 h-5 rounded-full" />
+                                Z.ai GLM-5.1
+                              </button>
+                            </>
+                          )}
 
 
                         </motion.div>
@@ -1035,7 +1191,7 @@ export default function SandboxPage() {
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
-                    onClick={() => setIsSearchEnabled(!isSearchEnabled)}
+                    onClick={handleToggleSearchMode}
                     className={cn(
                       "p-2 rounded-lg border-[2px] transition-all",
                       isSearchEnabled
@@ -1048,6 +1204,19 @@ export default function SandboxPage() {
                   </button>
                   <button
                     type="button"
+                    onClick={handleToggleImageMode}
+                    className={cn(
+                      "p-2 rounded-lg border-[2px] transition-all",
+                      isImageMode
+                        ? "bg-[#FFB86B] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                        : "border-transparent hover:border-black hover:bg-white"
+                    )}
+                    title="Image Generation Mode"
+                  >
+                    <Image className={cn("w-5 h-5", isImageMode ? "text-black" : "text-gray-600")} />
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => handleClearChat()}
                     className="p-2 hover:bg-red-50 rounded-lg text-gray-600 hover:text-red-500 transition-colors"
                     title="Clear Chat"
@@ -1057,7 +1226,7 @@ export default function SandboxPage() {
                   <button
                     type="button"
                     onClick={handleSend}
-                    disabled={(!inputValue.trim() && uploadedFiles.length === 0) || isTyping}
+                    disabled={(isImageMode ? !inputValue.trim() : (!inputValue.trim() && uploadedFiles.length === 0)) || isTyping}
                     className="p-2 bg-[#FF7A00] text-white border-[2px] border-black rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all disabled:opacity-50"
                   >
                     <Send className="w-5 h-5" />
@@ -1173,6 +1342,7 @@ export default function SandboxPage() {
                   <label className="block font-bold mb-2">Agent Name</label>
                   <Input
                     value={editConfigForm.name}
+                    placeholder="e.g., Marketing Assistant"
                     onChange={e => setEditConfigForm({ ...editConfigForm, name: e.target.value })}
                   />
                 </div>
@@ -1180,6 +1350,7 @@ export default function SandboxPage() {
                   <label className="block font-bold mb-2">Domain Expertise</label>
                   <Input
                     value={editConfigForm.expertise}
+                    placeholder="e.g., Digital Marketing, SEO"
                     onChange={e => setEditConfigForm({ ...editConfigForm, expertise: e.target.value })}
                   />
                 </div>
@@ -1187,14 +1358,16 @@ export default function SandboxPage() {
                   <label className="block font-bold mb-2">Tone / Personality</label>
                   <Input
                     value={editConfigForm.tone}
+                    placeholder="e.g., Friendly, Professional, Concise"
                     onChange={e => setEditConfigForm({ ...editConfigForm, tone: e.target.value })}
                   />
                 </div>
                 <div>
                   <label className="block font-bold mb-2">System Instructions</label>
                   <textarea
-                    className="w-full px-4 py-3 text-base border-[3px] border-black rounded-lg bg-white focus:outline-none focus:ring-4 focus:ring-[#FF7A00]/30 transition-all min-h-[100px]"
+                    className="w-full px-4 py-3 text-base border-[3px] border-black rounded-lg bg-white focus:outline-none focus:ring-4 focus:ring-[#FF7A00]/30 transition-all min-h-[100px] font-medium"
                     value={editConfigForm.description}
+                    placeholder="Provide specific instructions for the agent's behavior..."
                     onChange={e => setEditConfigForm({ ...editConfigForm, description: e.target.value })}
                   />
                 </div>
@@ -1204,7 +1377,10 @@ export default function SandboxPage() {
                     <label className="block font-bold">Active Guardrails</label>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <label className="flex items-center gap-2 bg-white px-3 py-2 border-[2px] border-black rounded-lg cursor-pointer hover:bg-gray-50">
+                    <label className={cn(
+                      "flex items-center gap-2 px-3 py-2 border-[2px] border-black rounded-lg cursor-pointer transition-all",
+                      editConfigForm.guardrails.length === 6 ? "bg-[#FF7A00] text-white" : "bg-white hover:bg-gray-50"
+                    )}>
                       <input
                         type="checkbox"
                         checked={editConfigForm.guardrails.length === 6}
@@ -1216,12 +1392,15 @@ export default function SandboxPage() {
                             setEditConfigForm({ ...editConfigForm, guardrails: [] });
                           }
                         }}
-                        className="w-4 h-4"
+                        className="hidden"
                       />
-                      <span className="text-sm font-bold">Toggle All Guardrails</span>
+                      <span className="text-sm font-bold">Toggle All</span>
                     </label>
                     {["stayOnTopic", "noHarmfulContent", "jailbreakResistance", "noCompetitors", "mandatoryDisclaimer", "noPersonalOpinions"].map(rule => (
-                      <label key={rule} className="flex items-center gap-2 bg-white px-3 py-2 border-[2px] border-black rounded-lg cursor-pointer hover:bg-gray-50">
+                      <label key={rule} className={cn(
+                        "flex items-center gap-2 px-3 py-2 border-[2px] border-black rounded-lg cursor-pointer transition-all",
+                        editConfigForm.guardrails.includes(rule) ? "bg-[#86EFAC]" : "bg-white hover:bg-gray-50"
+                      )}>
                         <input
                           type="checkbox"
                           checked={editConfigForm.guardrails.includes(rule)}
@@ -1232,9 +1411,9 @@ export default function SandboxPage() {
                               setEditConfigForm({ ...editConfigForm, guardrails: editConfigForm.guardrails.filter(r => r !== rule) });
                             }
                           }}
-                          className="w-4 h-4"
+                          className="hidden"
                         />
-                        <span className="text-sm font-bold">{rule}</span>
+                        <span className="text-sm font-bold capitalize">{rule.replace(/([A-Z])/g, ' $1').trim()}</span>
                       </label>
                     ))}
                   </div>
@@ -1245,10 +1424,10 @@ export default function SandboxPage() {
                     <label className="block font-bold">Agent Tools</label>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {["Read File", "Gmail", "Google Calendar", "Daytona", "AgentMail"].map(tool => (
+                    {["Read File", "Web Search", "Gmail", "Google Calendar", "Daytona", "AgentMail"].map(tool => (
                       <label key={tool} className={cn(
-                        "flex items-center gap-2 px-3 py-2 border-[2px] border-black rounded-lg cursor-pointer transition-colors",
-                        (editConfigForm.tools || []).includes(tool) ? "bg-[#FFD84D]" : "bg-white hover:bg-gray-50"
+                        "flex items-center gap-2 px-3 py-2 border-[2px] border-black rounded-lg cursor-pointer transition-all",
+                        (editConfigForm.tools || []).includes(tool) ? "bg-[#C4B5FD]" : "bg-white hover:bg-gray-50"
                       )}>
                         <input
                           type="checkbox"
@@ -1261,7 +1440,7 @@ export default function SandboxPage() {
                               setEditConfigForm({ ...editConfigForm, tools: currentTools.filter(t => t !== tool) });
                             }
                           }}
-                          className="w-4 h-4"
+                          className="hidden"
                         />
                         <span className="text-sm font-bold">{tool}</span>
                       </label>
