@@ -20,7 +20,6 @@ const QWEN_CODER_MODEL = "qwen-coder";
 const KIMI_MODEL = "kimi";
 const CLAUDE_MODEL = "claude-fast";
 const ZAI_MODEL = "glm";
-const GEMINI_3_1_PRO_MODEL = "gemini-large";
 const GROQ_LLAMA_MODEL = "llama-3.3-70b-versatile";
 
 const GEMINI_MODEL = "gemini-2.5-flash";
@@ -83,6 +82,9 @@ function sanitizeDomain(value) {
 }
 
 function normalizeModelSelection(model) {
+    if (!model) {
+        return GEMINI_MODEL;
+    }
     const normalized = typeof model === "string" ? model.trim() : "";
 
     if (!normalized) {
@@ -98,7 +100,6 @@ function normalizeModelSelection(model) {
         "Groq: Llama 3.3 80b": GROQ_LLAMA_MODEL,
         "DeepSeek-V3": "deepseek/DeepSeek-V3-0324",
         "OpenAI GPT-4o": "openai/gpt-4o",
-        "Gemini 3.1 Pro": GEMINI_3_1_PRO_MODEL,
         "Z.ai GLM-5.1": ZAI_MODEL,
         "Moonshot Kimi K2.5": KIMI_MODEL,
         "Claude Haiku 4.5": CLAUDE_MODEL,
@@ -289,8 +290,6 @@ export async function chatWithPersona(systemPrompt, history, userMessage, enable
             return runClaudeModel(fullPrompt);
         } else if (normalizedModel === ZAI_MODEL) {
             return runZaiModel(fullPrompt);
-        } else if (normalizedModel === GEMINI_3_1_PRO_MODEL) {
-            return runGemini31ProModel(fullPrompt);
         } else if (normalizedModel === GROQ_LLAMA_MODEL) {
             const groqReply = await runGroqTask(
                 fullPrompt,
@@ -539,28 +538,5 @@ async function runZaiModel(prompt) {
 
     const data = await res.json();
     console.log("Responding with Z.ai Model");
-    return data.choices?.[0]?.message?.content;
-}
-
-async function runGemini31ProModel(prompt) {
-    const apiKey = process.env.POLLINATIONS_API_KEY;
-    if (!apiKey) {
-        throw new Error("POLLINATIONS_API_KEY is not set in the environment variables.");
-    }
-
-    const res = await fetch("https://gen.pollinations.ai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            model: "gemini-large",
-            messages: [{ role: "user", content: prompt }]
-        })
-    });
-
-    const data = await res.json();
-    console.log("Responding with Gemini 3.1 Pro Model");
     return data.choices?.[0]?.message?.content;
 }

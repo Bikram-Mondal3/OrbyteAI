@@ -45,6 +45,7 @@ async function authenticateApiKeyOrLocalSandbox(req, res, next) {
  * Returns true if response appears to be generic/non-persona
  */
 function detectGenericResponse(response, domain) {
+    if (!response || typeof response !== "string") return false;
     const genericPatterns = [
         /^(hello|hi|hey)[!.]?\s+(i'm|i am)\s+(claude|an ai|a language model|an assistant)/i,
         /^(i'm|i am)\s+(claude|an ai|a language model|an assistant)/i,
@@ -99,6 +100,14 @@ function normalizeAttachedFiles(files) {
 }
 
 async function loadAgentRecord(agentId) {
+    if (agentId === "web-search-agent") {
+        return {
+            name: "Search Assistant",
+            domain: "Web Search",
+            systemPrompt: "You are a helpful assistant that uses Google Search to answer questions with the latest information.",
+            tools: ["Google Search", "Read File"]
+        };
+    }
     const localAgent = agentsDb.get(agentId);
     if (localAgent) {
         return localAgent;
@@ -175,7 +184,18 @@ function assertAgentIdentity(agent, agentId) {
 }
 
 async function handleAgentRequest(agentId, message, sessionId, attachedFiles, model) {
-    const agent = await loadAgentRecord(agentId);
+    let agent;
+    if (agentId === "web-search-agent") {
+        agent = {
+            name: "Web Search Specialist",
+            systemPrompt: "You are a web search specialist. Use the google_web_search tool to find information for the user and provide a comprehensive answer.",
+            domain: "Web Search",
+            tools: ["google_web_search"]
+        };
+    } else {
+        agent = await loadAgentRecord(agentId);
+    }
+
     if (!agent) {
         return { status: 404, payload: { error: "Agent not found" } };
     }
@@ -254,7 +274,7 @@ router.post('/:agentId/chat', authenticateApiKeyOrLocalSandbox, async (req, res)
         }
 
         // 1. Quick keyword-based safety check only (skip AI-based input guardrail for speed)
-        const lowerMessage = message.toLowerCase();
+        const lowerMessage = String(message || "").toLowerCase();
         const dangerousKeywords = ["hack", "bomb", "weapon", "illegal", "jailbreak", "ignore all rules", "forget instructions"];
         const hasDangerousContent = dangerousKeywords.some(keyword => lowerMessage.includes(keyword));
 
@@ -284,18 +304,18 @@ router.post('/:agentId/chat', authenticateApiKeyOrLocalSandbox, async (req, res)
 
 router.post('/search', authenticateApiKeyOrLocalSandbox, async (req, res) => {
     try {
-        const { message, session_id } = req.body;
+        const { message, session_id, model } = req.body;
         if (!message) {
             return res.status(400).json({ error: "message is required" });
         }
 
-        console.log(`[Web Search] Processing query: "${message}"`);
-        const result = await performWebSearch(message);
+        console.log(`[Web Search] Processing query: "${message}" using model: ${model || "default"}`);
 
-        return res.json({
-            message: result,
-            session_id
-        });
+        // Use the chat pipeline with Google Search tool enabled implicitly
+        // We create a dummy agent context or use a general search agent ID
+        const result = await handleAgentRequest("web-search-agent", message, session_id || "web-search-session", [], model);
+
+        return res.status(result.status).json(result.payload);
     } catch (error) {
         console.error("Search Error:", safeErrorMessage(error));
         return res.status(500).json({ error: "Search failed" });
@@ -336,6 +356,25 @@ router.post('/register', authenticateApiKeyOrLocalSandbox, async (req, res) => {
     } catch (error) {
         console.error("Error in /register:", safeErrorMessage(error));
         return res.status(500).json({ error: "Internal server error during agent registration" });
+    }
+});
+
+router.post('/search', authenticateApiKeyOrLocalSandbox, async (req, res) => {
+    try {
+        const { message, session_id, model } = req.body;
+        if (!message) {
+            return res.status(400).json({ error: "message is required" });
+        }
+
+        console.log(`[Web Search] Processing search for query: "${message}" using model: ${model || "default"}`);
+
+        // Use the common handler with the virtual search agent
+        const result = await handleAgentRequest("web-search-agent", message, session_id || "web-search-session", [], model);
+
+        return res.status(result.status).json(result.payload);
+    } catch (error) {
+        console.error("Error in /search:", safeErrorMessage(error));
+        return res.status(500).json({ error: "Internal server error during search" });
     }
 });
 

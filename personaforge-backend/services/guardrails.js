@@ -16,7 +16,7 @@ const BLOCKED_KEYWORDS = [
  * Layer 1 — keywordCheck
  */
 function keywordCheck(message) {
-    const lowerMessage = message.toLowerCase();
+    const lowerMessage = String(message || "").toLowerCase();
     for (const keyword of BLOCKED_KEYWORDS) {
         if (lowerMessage.includes(keyword)) {
             return { safe: false, reason: keyword };

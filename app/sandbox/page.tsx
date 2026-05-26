@@ -468,13 +468,10 @@ export default function SandboxPage() {
       setIsTyping(false)
 
       if (isSearchEnabled) {
-        setIsSearchEnabled(false); // Reset search after use if desired, or keep it.
-        // The user said "when user click on it and send any msg, then the msg is not comes to the selected model... send the genertaed output to the frontend"
-        // I'll reset it to avoid accidental searches.
-      }
-
-      // Update stats
-      if (!isSearchEnabled) {
+        // Search handled by a virtual agent, don't update stats for specific agent usually, 
+        // but we can if we want to track search usage.
+      } else {
+        // Update stats
         if (messages.length === 1) { // First exchange (Intro + User First Message)
           updateAgentStats({ testCount: 1, totalApiCalls: 1 })
         } else {
@@ -939,7 +936,6 @@ export default function SandboxPage() {
                       onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
                       className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FFF4E2] border-[3px] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-[#FDF3B1] transition-all"
                     >
-                      <AtSign className="w-5 h-5" />
                       <span className="font-bold text-sm">@{selectedModel}</span>
                     </button>
                     <AnimatePresence>
@@ -1003,13 +999,6 @@ export default function SandboxPage() {
                           >
                             <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHVsO5kFrri_uqZdlB6mACC2bdyyy6D0bYag&s" alt="Groq" className="w-5 h-5 rounded-full" />
                             Groq: llama 3.3 80b
-                          </button>
-                          <button
-                            onClick={() => { setSelectedModel("Gemini 3.1 Pro"); setIsModelDropdownOpen(false); }}
-                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3"
-                          >
-                            <img src="https://static.vecteezy.com/system/resources/previews/055/687/065/non_2x/gemini-google-icon-symbol-logo-free-png.png" alt="Gemini" className="w-5 h-5 rounded-full" />
-                            Gemini 3.1 Pro
                           </button>
                           <button
                             onClick={() => { setSelectedModel("Z.ai GLM-5.1"); setIsModelDropdownOpen(false); }}
