@@ -7,7 +7,7 @@ const prompt = encodeURIComponent(
 async function generateVideo() {
     try {
         const response = await fetch(
-            `https://gen.pollinations.ai/video/${prompt}?model=ltx-2`,
+            `https://gen.pollinations.ai/video/${prompt}?model=nova-reel`,
             {
                 method: "GET",
                 headers: {

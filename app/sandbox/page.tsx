@@ -27,6 +27,7 @@ import {
   Copy,
   AtSign,
   Image,
+  Video,
   Download,
   Globe,
   Trash2,
@@ -168,6 +169,7 @@ interface Message {
   content: string
   timestamp: string
   imageUrl?: string
+  videoUrl?: string
 }
 
 interface LogEntry {
@@ -184,13 +186,17 @@ interface UploadedFile {
 }
 
 const IMAGE_MODELS = [
-  { label: "Flux Schnell", value: "flux" },
-  { label: "FLUX.2 Klein 4B", value: "klein" },
-  { label: "Z-Image Turbo", value: "zimage" },
-  { label: "GPT Image 1 Mini", value: "gptimage" },
-  { label: "FLUX.1 Kontext", value: "kontext" },
-  { label: "Wan 2.7 Image", value: "wan-image" },
-  { label: "Qwen Image Plus", value: "qwen-image" }
+  { label: "FLUX.1 Kontext", value: "kontext", icon: "https://unpkg.com/@lobehub/icons-static-png@latest/light/flux.png" },
+  { label: "FLUX.2 Klein 4B", value: "klein", icon: "https://unpkg.com/@lobehub/icons-static-png@latest/light/flux.png" },
+  { label: "Flux Schnell", value: "flux", icon: "https://unpkg.com/@lobehub/icons-static-png@latest/light/flux.png" },
+  { label: "GPT Image 1 Mini", value: "gptimage", icon: "https://static.vecteezy.com/system/resources/previews/022/227/364/non_2x/openai-chatgpt-logo-icon-free-png.png" },
+  { label: "Qwen Image Plus", value: "qwen-image", icon: "https://qwenlm.github.io/img/logo.png" },
+  { label: "Wan 2.7 Image", value: "wan-image", icon: "https://qwenlm.github.io/img/logo.png" },
+  { label: "Z-Image Turbo", value: "zimage", icon: "https://unpkg.com/@lobehub/icons-static-png@latest/light/flux.png" }
+]
+
+const VIDEO_MODELS = [
+  { label: "LTX-2.3", value: "ltx-2", icon: "video" }
 ]
 
 export default function SandboxPage() {
@@ -217,6 +223,7 @@ export default function SandboxPage() {
   const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false)
   const [isSearchEnabled, setIsSearchEnabled] = useState(false)
   const [isImageMode, setIsImageMode] = useState(false)
+  const [isVideoMode, setIsVideoMode] = useState(false)
 
   // Auto-resize textarea
   useEffect(() => {
@@ -250,10 +257,12 @@ export default function SandboxPage() {
     : "Read File enabled via server load"
 
   const selectedImageModel = IMAGE_MODELS.find(model => model.label === selectedModel) || IMAGE_MODELS[0]
+  const selectedVideoModel = VIDEO_MODELS.find(model => model.label === selectedModel) || VIDEO_MODELS[0]
 
   const handleToggleSearchMode = () => {
-    if (isImageMode) {
+    if (isImageMode || isVideoMode) {
       setIsImageMode(false)
+      setIsVideoMode(false)
       setSelectedModel(previousChatModel)
     }
 
@@ -272,6 +281,26 @@ export default function SandboxPage() {
     setPreviousChatModel(selectedModel)
     setSelectedModel(IMAGE_MODELS[0].label)
     setIsImageMode(true)
+    setIsVideoMode(false)
+    setIsSearchEnabled(false)
+  }
+
+  const handleToggleVideoMode = () => {
+    setIsModelDropdownOpen(false)
+
+    if (isVideoMode) {
+      setIsVideoMode(false)
+      setSelectedModel(previousChatModel)
+      return
+    }
+
+    if (!isImageMode) {
+      setPreviousChatModel(selectedModel)
+    }
+
+    setIsImageMode(false)
+    setSelectedModel(VIDEO_MODELS[0].label)
+    setIsVideoMode(true)
     setIsSearchEnabled(false)
   }
 
@@ -506,8 +535,76 @@ export default function SandboxPage() {
     }
   }
 
+  const handleGenerateVideo = async () => {
+    const promptText = inputValue.trim()
+    if (!promptText || isTyping) return
+
+    const userMessage: Message = {
+      id: Date.now() + Math.random(),
+      type: "user",
+      content: promptText,
+      timestamp: new Date().toLocaleTimeString()
+    }
+
+    setMessages(prev => [...prev, userMessage])
+    setInputValue("")
+    setIsTyping(true)
+
+    setLogs(prev => [
+      ...prev,
+      { id: Date.now() + Math.random(), type: "info", message: `Generating video with ${selectedModel}`, timestamp: new Date().toLocaleTimeString() }
+    ])
+
+    try {
+      const res = await fetch('/api/video-generation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: promptText,
+          model: selectedVideoModel.value
+        })
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null)
+        throw new Error(errorData?.error || `HTTP Error: ${res.status}`)
+      }
+
+      const blob = await res.blob()
+      const videoUrl = URL.createObjectURL(blob)
+
+      const aiMessage: Message = {
+        id: Date.now() + Math.random(),
+        type: "ai",
+        content: `Generated with ${selectedModel}`,
+        timestamp: new Date().toLocaleTimeString(),
+        videoUrl
+      }
+
+      setMessages(prev => [...prev, aiMessage])
+      setLogs(prev => [
+        ...prev,
+        { id: Date.now() + Math.random(), type: "success", message: `Video generated with ${selectedModel}`, timestamp: new Date().toLocaleTimeString() }
+      ])
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to generate video"
+      setMessages(prev => [...prev, { id: Date.now() + Math.random(), type: "ai", content: errorMessage, timestamp: new Date().toLocaleTimeString() }])
+      setLogs(prev => [
+        ...prev,
+        { id: Date.now() + Math.random(), type: "warning", message: errorMessage, timestamp: new Date().toLocaleTimeString() }
+      ])
+    } finally {
+      setIsTyping(false)
+    }
+  }
+
   const handleSend = async () => {
     if (isTyping) return
+
+    if (isVideoMode) {
+      await handleGenerateVideo()
+      return
+    }
 
     if (isImageMode) {
       await handleGenerateImage()
@@ -952,6 +1049,27 @@ export default function SandboxPage() {
                               </a>
                             </div>
                           )}
+                          {message.videoUrl && (
+                            <div className="group relative mt-3 w-full max-w-2xl">
+                              <video
+                                src={message.videoUrl}
+                                controls
+                                playsInline
+                                className="block w-full rounded-xl border-[3px] border-black bg-white"
+                              />
+                              <a
+                                href={message.videoUrl}
+                                download={`sandbox-video-${message.id}.mp4`}
+                                target="_blank"
+                                rel="noreferrer"
+                                aria-label="Download generated video"
+                                title="Download generated video"
+                                className="absolute right-3 top-3 inline-flex items-center justify-center rounded-lg border-[2px] border-black bg-white/95 p-2 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-[#FFF4E2] hover:translate-x-[1px] hover:translate-y-[1px]"
+                              >
+                                <Download className="h-4 w-4" />
+                              </a>
+                            </div>
+                          )}
                         </>
                       ) : (
                         <p>{message.content}</p>
@@ -1026,7 +1144,7 @@ export default function SandboxPage() {
                 )}
 
                 <AnimatePresence>
-                  {!isImageMode && selectedModel !== "Gemini 2.5 Flash" && (
+                  {!isImageMode && !isVideoMode && selectedModel !== "Gemini 2.5 Flash" && (
                     <motion.div
                       initial={{ x: "100%" }}
                       animate={{ x: 0 }}
@@ -1065,13 +1183,13 @@ export default function SandboxPage() {
                   {/* Input Area */}
                   <textarea
                     ref={textareaRef}
-                    placeholder={isImageMode ? `Describe the image for ${selectedModel}...` : isSearchEnabled ? "Search the web with Gemini 2.5 Flash..." : `Ask ${config?.name || 'anything'}...`}
+                    placeholder={isImageMode ? `Describe the image for ${selectedModel}...` : isVideoMode ? `Describe the video for ${selectedModel}...` : isSearchEnabled ? "Search the web with Gemini 2.5 Flash..." : `Ask ${config?.name || 'anything'}...`}
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
-                        if (isImageMode ? inputValue.trim() : (inputValue.trim() || uploadedFiles.length > 0)) {
+                        if ((isImageMode || isVideoMode) ? inputValue.trim() : (inputValue.trim() || uploadedFiles.length > 0)) {
                           handleSend();
                         }
                       }
@@ -1115,7 +1233,27 @@ export default function SandboxPage() {
                                     selectedModel === model.label && "bg-[#FDF3B1]"
                                   )}
                                 >
-                                  <Image className="w-5 h-5 rounded-full" />
+                                  <img src={model.icon} alt={model.label} className="w-5 h-5 rounded-full" />
+                                  {model.label}
+                                </button>
+                              ))}
+                            </>
+                          ) : isVideoMode ? (
+                            <>
+                              <div className="font-bold text-xs text-gray-500 uppercase px-3 pt-2 pb-1">Video Models</div>
+                              {VIDEO_MODELS.map((model) => (
+                                <button
+                                  key={model.value}
+                                  onClick={() => {
+                                    setSelectedModel(model.label)
+                                    setIsModelDropdownOpen(false)
+                                  }}
+                                  className={cn(
+                                    "w-full text-left px-3 py-2 rounded-md hover:bg-[#FDF3B1] font-bold text-sm flex items-center gap-3",
+                                    selectedModel === model.label && "bg-[#FDF3B1]"
+                                  )}
+                                >
+                                  <Video className="w-5 h-5 rounded-full" />
                                   {model.label}
                                 </button>
                               ))}
@@ -1219,6 +1357,19 @@ export default function SandboxPage() {
                     title="Image Generation Mode"
                   >
                     <Image className={cn("w-5 h-5", isImageMode ? "text-black" : "text-gray-600")} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleToggleVideoMode}
+                    className={cn(
+                      "p-2 rounded-lg border-[2px] transition-all",
+                      isVideoMode
+                        ? "bg-[#FFB86B] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                        : "border-transparent hover:border-black hover:bg-white"
+                    )}
+                    title="Video Generation Mode"
+                  >
+                    <Video className={cn("w-5 h-5", isVideoMode ? "text-black" : "text-gray-600")} />
                   </button>
                   <button
                     type="button"
