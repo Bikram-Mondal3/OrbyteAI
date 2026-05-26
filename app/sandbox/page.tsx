@@ -185,7 +185,12 @@ interface UploadedFile {
 
 const IMAGE_MODELS = [
   { label: "Flux Schnell", value: "flux" },
-  { label: "FLUX.2 Klein 4B", value: "klein" }
+  { label: "FLUX.2 Klein 4B", value: "klein" },
+  { label: "Z-Image Turbo", value: "zimage" },
+  { label: "GPT Image 1 Mini", value: "gptimage" },
+  { label: "FLUX.1 Kontext", value: "kontext" },
+  { label: "Wan 2.7 Image", value: "wan-image" },
+  { label: "Qwen Image Plus", value: "qwen-image" }
 ]
 
 export default function SandboxPage() {

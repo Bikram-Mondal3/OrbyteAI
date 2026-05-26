@@ -1,13 +1,13 @@
 import fs from "fs";
 
 const prompt = encodeURIComponent(
-    "A car"
+    "A car flying in the sky with a rainbow in the background, in the style of a Pixar animation"
 );
 
-async function generateImage() {
+async function generateVideo() {
     try {
         const response = await fetch(
-            `https://gen.pollinations.ai/image/${prompt}?model=klein`,
+            `https://gen.pollinations.ai/video/${prompt}?model=ltx-2`,
             {
                 method: "GET",
                 headers: {
@@ -24,12 +24,12 @@ async function generateImage() {
 
         const buffer = Buffer.from(await blob.arrayBuffer());
 
-        fs.writeFileSync("photo.png", buffer);
+        fs.writeFileSync("video.mp4", buffer);
 
-        console.log("✅ Image saved as photo.png");
+        console.log("✅ Video saved as video.mp4");
     } catch (error) {
         console.error("❌ Error:", error);
     }
 }
 
-generateImage();
+generateVideo();
