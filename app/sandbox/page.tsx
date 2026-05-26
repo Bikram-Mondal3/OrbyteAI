@@ -29,6 +29,7 @@ import {
   Globe,
   Trash2,
   Send,
+  AlertCircle,
 } from "lucide-react"
 
 function cn(...classes: (string | undefined | null | boolean)[]): string {
@@ -858,74 +859,90 @@ export default function SandboxPage() {
           {/* Chat Input */}
           <div className="border-t-[3px] border-black p-4 bg-[#FDF3B1]">
             <div className="bg-[#FFF4E2] border-[3px] border-black rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col focus-within:ring-4 focus-within:ring-[#FF7A00]/30 transition-all relative">
-
-              {/* Uploaded Files Area Top of Textarea */}
-              {uploadedFiles.length > 0 && (
-                <div className="pt-3 px-3 flex flex-wrap items-center gap-2">
-                  {uploadedFiles.map((file) => (
-                    <div
-                      key={file.file_path}
-                      className="flex items-center gap-2 px-2 py-1.5 bg-white border-[2px] border-black rounded-xl text-xs font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] max-w-fit"
-                    >
-                      <div className="flex items-center gap-2 bg-[#C4B5FD] px-2 py-1 border-[2px] border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                        <FileText className="w-3 h-3" />
-                        <span className="truncate max-w-[120px]">{file.file_name}</span>
-                      </div>
-                      <button
-                        type="button"
-                        aria-label={`Remove ${file.file_name}`}
-                        onClick={() => setUploadedFiles(prev => prev.filter(item => item.file_path !== file.file_path))}
-                        className="ml-1 hover:bg-red-100 rounded-full p-0.5 transition-colors"
+              <div className="overflow-hidden rounded-t-2xl">
+                {/* Uploaded Files Area Top of Textarea */}
+                {uploadedFiles.length > 0 && (
+                  <div className="pt-3 px-3 flex flex-wrap items-center gap-2">
+                    {uploadedFiles.map((file) => (
+                      <div
+                        key={file.file_path}
+                        className="flex items-center gap-2 px-2 py-1.5 bg-white border-[2px] border-black rounded-xl text-xs font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] max-w-fit"
                       >
-                        <X className="w-4 h-4" />
-                      </button>
+                        <div className="flex items-center gap-2 bg-[#C4B5FD] px-2 py-1 border-[2px] border-black rounded shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                          <FileText className="w-3 h-3" />
+                          <span className="truncate max-w-[120px]">{file.file_name}</span>
+                        </div>
+                        <button
+                          type="button"
+                          aria-label={`Remove ${file.file_name}`}
+                          onClick={() => setUploadedFiles(prev => prev.filter(item => item.file_path !== file.file_path))}
+                          className="ml-1 hover:bg-red-100 rounded-full p-0.5 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <div className="px-3 py-1.5 bg-[#E0F2FE] border-[2px] border-black rounded-xl text-xs font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                      {fileReadStatusMessage}
                     </div>
-                  ))}
-                  <div className="px-3 py-1.5 bg-[#E0F2FE] border-[2px] border-black rounded-xl text-xs font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                    {fileReadStatusMessage}
                   </div>
-                </div>
-              )}
+                )}
 
-              <div className="relative">
-                {/* Plus Icon at Top Left */}
-                <label className={cn(
-                  "absolute top-2.5 left-3 flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200 cursor-pointer border-[2px] border-transparent hover:border-black hover:bg-white hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] z-10",
-                  !canReadFiles && "opacity-50 cursor-not-allowed hover:border-transparent hover:bg-transparent hover:shadow-none"
-                )}>
-                  <Plus className="w-5 h-5 text-gray-600" />
-                  <input
-                    type="file"
-                    accept=".txt,.json,.md,.markdown,.csv,.tsv,.log,.yaml,.yml,.xml,.html,.css,.js,.ts"
-                    className="hidden"
-                    disabled={!canReadFiles}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        handleFileUpload(file);
+                <AnimatePresence>
+                  {selectedModel !== "Gemini 2.5 Flash" && (
+                    <motion.div
+                      initial={{ x: "100%" }}
+                      animate={{ x: 0 }}
+                      exit={{ x: "100%" }}
+                      transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                      className="bg-[#FEF9C3] border-b-[2px] border-black/10 px-4 py-1.5 text-[10px] sm:text-xs font-black text-amber-900 flex items-center gap-2"
+                    >
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      <span>To enable tool calling, switch the model to Gemini 2.5 Flash.</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <div className="relative">
+                  {/* Plus Icon at Top Left */}
+                  <label className={cn(
+                    "absolute top-2.5 left-3 flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200 cursor-pointer border-[2px] border-transparent hover:border-black hover:bg-white hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] z-10",
+                    !canReadFiles && "opacity-50 cursor-not-allowed hover:border-transparent hover:bg-transparent hover:shadow-none"
+                  )}>
+                    <Plus className="w-5 h-5 text-gray-600" />
+                    <input
+                      type="file"
+                      accept=".txt,.json,.md,.markdown,.csv,.tsv,.log,.yaml,.yml,.xml,.html,.css,.js,.ts"
+                      className="hidden"
+                      disabled={!canReadFiles}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleFileUpload(file);
+                        }
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+
+                  {/* Input Area */}
+                  <textarea
+                    ref={textareaRef}
+                    placeholder={isSearchEnabled ? "Search the web with Gemini 2.5 Flash..." : `Ask ${config?.name || 'anything'}...`}
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        if (inputValue.trim() || uploadedFiles.length > 0) {
+                          handleSend();
+                        }
                       }
-                      e.target.value = "";
                     }}
+                    className="w-full bg-transparent pl-14 pr-4 pt-[13px] pb-2 text-base outline-none resize-none min-h-[52px] font-medium"
+                    rows={1}
                   />
-                </label>
-
-                {/* Input Area */}
-                <textarea
-                  ref={textareaRef}
-                  placeholder={isSearchEnabled ? "Search the web with Gemini 2.5 Flash..." : `Ask ${config?.name || 'anything'}...`}
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      if (inputValue.trim() || uploadedFiles.length > 0) {
-                        handleSend();
-                      }
-                    }
-                  }}
-                  className="w-full bg-transparent pl-14 pr-4 pt-[13px] pb-2 text-base outline-none resize-none min-h-[52px] font-medium"
-                  rows={1}
-                />
+                </div>
               </div>
 
               {/* Bottom Actions */}
