@@ -155,6 +155,10 @@ function PersonaForgeLanding() {
     router.push(user ? "/dashboard" : "/login")
   }
 
+  const handleWatchDemo = () => {
+    window.location.href = "https://drive.google.com/file/d/1TVpFt6QJkdPlDZE22jy8R5O8tH2Fxcqf/view?usp=drive_link"
+  }
+
   const features = [
     {
       icon: <Sparkles className="w-8 h-8" />,
@@ -328,7 +332,7 @@ function PersonaForgeLanding() {
                 Start Building Agent
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
-              <Button variant="outline" size="lg">
+              <Button variant="outline" size="lg" onClick={handleWatchDemo}>
                 <Play className="mr-2 w-5 h-5" />
                 Watch Demo
               </Button>

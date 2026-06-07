@@ -29,7 +29,6 @@ import {
   Image,
   Video,
   Download,
-  MoreVertical,
   Globe,
   Trash2,
   Send,
@@ -222,13 +221,10 @@ export default function SandboxPage() {
   const [selectedModel, setSelectedModel] = useState("Gemini 2.5 Flash")
   const [previousChatModel, setPreviousChatModel] = useState("Gemini 2.5 Flash")
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false)
-  const [isFeatureMenuOpen, setIsFeatureMenuOpen] = useState(false)
   const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false)
   const [isSearchEnabled, setIsSearchEnabled] = useState(false)
   const [isImageMode, setIsImageMode] = useState(false)
   const [isVideoMode, setIsVideoMode] = useState(false)
-  const [isImageGenerationEnabled, setIsImageGenerationEnabled] = useState(false)
-  const [isVideoGenerationEnabled, setIsVideoGenerationEnabled] = useState(false)
 
   // Auto-resize textarea
   useEffect(() => {
@@ -307,28 +303,6 @@ export default function SandboxPage() {
     setSelectedModel(VIDEO_MODELS[0].label)
     setIsVideoMode(true)
     setIsSearchEnabled(false)
-  }
-
-  const handleToggleImageGenerationFeature = () => {
-    setIsImageGenerationEnabled(prev => {
-      const next = !prev
-      if (!next && isImageMode) {
-        setIsImageMode(false)
-        setSelectedModel(previousChatModel)
-      }
-      return next
-    })
-  }
-
-  const handleToggleVideoGenerationFeature = () => {
-    setIsVideoGenerationEnabled(prev => {
-      const next = !prev
-      if (!next && isVideoMode) {
-        setIsVideoMode(false)
-        setSelectedModel(previousChatModel)
-      }
-      return next
-    })
   }
 
   useEffect(() => {
@@ -1012,58 +986,10 @@ export default function SandboxPage() {
         {/* Center Panel - Chat Sandbox */}
         <main className="flex-1 flex flex-col bg-[#FFF4E2]">
           <div className="border-b-[3px] border-black p-4 bg-[#FDF3B1] relative">
-            <div className="flex items-start justify-between gap-4">
+            <div>
               <div>
                 <h2 className="text-2xl font-black">Sandbox Chat</h2>
                 <p className="text-sm text-gray-600">Test {config.name}'s responses</p>
-              </div>
-              <div className="relative shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsFeatureMenuOpen(prev => !prev)}
-                  className="inline-flex items-center justify-center p-1 text-gray-700 transition-colors hover:text-black"
-                  aria-label="More options"
-                  title="More options"
-                >
-                  <MoreVertical className="h-5 w-5" />
-                </button>
-
-                {isFeatureMenuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border-[3px] border-black bg-white p-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-30">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between gap-3 rounded-lg border-[2px] border-black px-3 py-2">
-                        <span className="text-sm font-bold">Image generation</span>
-                        <button
-                          type="button"
-                          onClick={handleToggleImageGenerationFeature}
-                          className={cn(
-                            "inline-flex h-7 w-12 items-center rounded-full border-[2px] border-black px-1 transition-all",
-                            isImageGenerationEnabled ? "bg-[#86EFAC] justify-end" : "bg-gray-200 justify-start"
-                          )}
-                          aria-pressed={isImageGenerationEnabled}
-                          aria-label="Toggle image generation"
-                        >
-                          <span className="h-4 w-4 rounded-full bg-white border-[1px] border-black" />
-                        </button>
-                      </div>
-                      <div className="flex items-center justify-between gap-3 rounded-lg border-[2px] border-black px-3 py-2">
-                        <span className="text-sm font-bold">Video Generation</span>
-                        <button
-                          type="button"
-                          onClick={handleToggleVideoGenerationFeature}
-                          className={cn(
-                            "inline-flex h-7 w-12 items-center rounded-full border-[2px] border-black px-1 transition-all",
-                            isVideoGenerationEnabled ? "bg-[#86EFAC] justify-end" : "bg-gray-200 justify-start"
-                          )}
-                          aria-pressed={isVideoGenerationEnabled}
-                          aria-label="Toggle video generation"
-                        >
-                          <span className="h-4 w-4 rounded-full bg-white border-[1px] border-black" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -1425,36 +1351,32 @@ export default function SandboxPage() {
                     >
                       <Globe className={cn("w-5 h-5", isSearchEnabled ? "text-black" : "text-gray-600")} />
                     </button>
-                    {isImageGenerationEnabled && (
-                      <button
-                        type="button"
-                        onClick={handleToggleImageMode}
-                        className={cn(
-                          "p-2 rounded-lg border-[2px] transition-all",
-                          isImageMode
-                            ? "bg-[#FFB86B] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                            : "border-transparent hover:border-black hover:bg-white"
-                        )}
-                        title="Image Generation Mode"
-                      >
-                        <Image className={cn("w-5 h-5", isImageMode ? "text-black" : "text-gray-600")} />
-                      </button>
-                    )}
-                    {isVideoGenerationEnabled && (
-                      <button
-                        type="button"
-                        onClick={handleToggleVideoMode}
-                        className={cn(
-                          "p-2 rounded-lg border-[2px] transition-all",
-                          isVideoMode
-                            ? "bg-[#FFB86B] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                            : "border-transparent hover:border-black hover:bg-white"
-                        )}
-                        title="Video Generation Mode"
-                      >
-                        <Video className={cn("w-5 h-5", isVideoMode ? "text-black" : "text-gray-600")} />
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={handleToggleImageMode}
+                      className={cn(
+                        "p-2 rounded-lg border-[2px] transition-all",
+                        isImageMode
+                          ? "bg-[#FFB86B] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                          : "border-transparent hover:border-black hover:bg-white"
+                      )}
+                      title="Image Generation Mode"
+                    >
+                      <Image className={cn("w-5 h-5", isImageMode ? "text-black" : "text-gray-600")} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleToggleVideoMode}
+                      className={cn(
+                        "p-2 rounded-lg border-[2px] transition-all",
+                        isVideoMode
+                          ? "bg-[#FFB86B] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                          : "border-transparent hover:border-black hover:bg-white"
+                      )}
+                      title="Video Generation Mode"
+                    >
+                      <Video className={cn("w-5 h-5", isVideoMode ? "text-black" : "text-gray-600")} />
+                    </button>
                     <button
                       type="button"
                       onClick={() => handleClearChat()}
@@ -1466,7 +1388,7 @@ export default function SandboxPage() {
                     <button
                       type="button"
                       onClick={handleSend}
-                      disabled={(isImageMode ? !inputValue.trim() : (!inputValue.trim() && uploadedFiles.length === 0)) || isTyping}
+                      disabled={((isImageMode || isVideoMode) ? !inputValue.trim() : (!inputValue.trim() && uploadedFiles.length === 0)) || isTyping}
                       className="p-2 bg-[#FF7A00] text-white border-[2px] border-black rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all disabled:opacity-50"
                     >
                       <Send className="w-5 h-5" />
