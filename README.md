@@ -1,352 +1,274 @@
-# PersonaForge
+# 🤖🌟 PersonaForge – AI Agent Orchestration Platform
 
-![Screenshot](./screenshot.png)
+![Preview Image](screenshot.png)
 
-PersonaForge is a full-stack AI agent builder for creating, testing, and managing persona-driven agents. It includes a Next.js frontend for authentication, agent management, API keys, settings, and sandbox testing, plus an Express backend that handles agent chat, tool execution, file uploads, and MCP-backed integrations.
+PersonaForge is a next-generation AI Agent Orchestration Platform that allows users to create powerful, persona-driven AI agents using natural language. The platform combines intelligent orchestration, memory systems, tool integrations, and safety guardrails to help developers build production-ready AI workflows without manually engineering complex multi-agent systems.
 
-## What is implemented
+From web search to image generation, from video generation to workflow automation, PersonaForge transforms prompts into scalable, domain-specific AI specialists.
 
-- Agent creation UI at `/create-agent`
-- Sandbox chat UI at `/sandbox`
-- Dashboard for viewing saved agents
-- User authentication with:
-  - Email/password credentials
-  - Google OAuth
-  - GitHub OAuth
-- MongoDB-backed storage for:
-  - Users
-  - Agents
-  - API keys
-- API key generation and management
-- Backend chat API for persona-based responses
-- Session chat memory with:
-  - Redis when `REDIS_URL` is configured
-  - In-memory fallback when Redis is not configured
-- Tool-enabled chat support for:
-  - Google Search
-  - Read File
-- File upload endpoint for text-based files used in sandbox chat
-- MCP server auto-started by the backend for tool exposure
-- Multiple model routes in the backend, with Gemini ADK as the main tool-enabled path
+---
 
-## Stack
+# ❗ Problem Statement
 
-### Frontend
+Building AI agents today is complex and fragmented. Developers must manually manage prompt engineering, workflow orchestration, memory systems, tool integrations, and safety guardrails. As agents become more advanced, maintaining reliable, secure, and context-aware behavior becomes increasingly difficult.
 
-- Next.js 16
-- React 19
-- TypeScript
-- Tailwind CSS 4
-- Framer Motion
-- NextAuth
-- MongoDB / Mongoose
+PersonaForge solves this by providing a unified platform to create safe, intelligent, persona-driven, and tool-augmented AI agents with simplified orchestration and scalable workflows.
 
-### Backend
+# 🌟 Features
 
-- Express 5
-- Google ADK
-- FastMCP
-- MCP SDK
-- Redis via `ioredis`
-- MongoDB / Mongoose
+- 🤖 Persona-Driven AI Agents – Create domain-specific AI assistants with strict identity enforcement
+- 🧠 Memory & Context Awareness – Maintain conversation history and stateful reasoning
+- 🛡️ Multi-Layer Guardrails – Prevent jailbreaks, unsafe outputs, and persona drift
+- 🔗 Tool-Augmented Intelligence – Connect agents with external tools and APIs
+- 🌐 Real-Time Web Search – Retrieve and summarize live internet information
+- 📄 File Intelligence – Analyze PDFs, datasets, and uploaded documents
+- 🎤 Voice AI Integration – Enable speech generation and voice-enabled interactions
+- ⚡ Multi-Agent Orchestration – Coordinate workflows using LangGraph & LangChain
+- ☁️ Cloud-Ready Architecture – Built for scalable deployment and enterprise workflows
+- 🧩 Extensible System – Easily integrate custom MCP servers and external services
+- 🔐 Secure Authentication – OAuth-based login with Google and GitHub
+- 🎨 Modern Developer Experience – Interactive UI with sandbox-style agent testing
 
-## Project structure
+---
 
-```text
-app/                     Next.js app router pages and API routes
-components/              Shared UI components
-contexts/                React auth context
-lib/                     Auth, DB, and utility helpers
-models/                  Mongoose models for frontend APIs
-personaforge-backend/    Express backend, tool runtime, MCP server
+# 🏗️ Architecture Overview
+
+PersonaForge follows a layered AI orchestration architecture designed for scalability, safety, and intelligent workflow execution.
+
+```mermaid
+graph TD
+    A[User Prompt] --> B[Persona Engine]
+    B --> C[Google ADK Agent Runtime]
+    C --> D[LangGraph Orchestrator]
+    D --> E[Tool Routing Layer]
+    E --> F[MCP Servers and External Integrations]
+    D --> G[Memory and Context Engine]
+    F --> H[Guardrails and Validation]
+    G --> H
+    H --> I[Final AI Response]
 ```
 
-## Core flows
+The platform combines persona enforcement, workflow orchestration, memory systems, and external tool integrations into a unified AI operating layer.
 
-### 1. Create an agent
+---
 
-The `/create-agent` page lets a signed-in user define:
+# 🛡️ Safety & Guardrails
 
-- name
-- description
-- system prompt
-- tone
-- domain
-- response style
-- guardrails
-- tools
-- memory mode
-- response length
-- safety filters
+PersonaForge includes multi-layer safety systems to ensure reliable and controllable AI behavior.
 
-Saved agents are persisted through the Next.js API layer into MongoDB.
+### Core Protection Layers
+- Persona consistency enforcement
+- Prompt injection resistance
+- Identity lock system
+- Unsafe output filtering
+- Output validation & regeneration
+- Domain-aware response checking
 
-### 2. Test in sandbox
+These mechanisms help agents remain safe, stable, and production-ready across long conversations and complex workflows.
 
-The `/sandbox` page can:
+---
 
-- register a temporary backend agent session
-- send chat messages to the Express backend
-- upload text-based files for analysis
-- switch among supported model labels
-- run web search mode
-- test memory and jailbreak behavior
+# 🧩 Available Tools
 
-### 3. Call agents programmatically
+| Tool | Description |
+|------|-------------|
+| 📂 Read File | Analyze uploaded files, PDFs, documents, and datasets |
+| ⚡ Daytona | Execute code, run shell commands, and manage secure sandboxes |
+| 🐙 GitHub MCP Server | Manage repositories, PRs, issues, commits, and GitHub workflows |
+| 📧 AgentMail | Read, send, and manage emails with intelligent automation |
+| 🎤 ElevenLabs | Generate speech, clone voices, transcribe audio, and create sound effects |
+| 📝 Notion | Search workspaces, manage pages, databases, and collaborative content |
+| 📮 Postman | Test APIs, manage collections, environments, and workflows |
+| 🍃 MongoDB MCP | Query databases, manage collections, and interact with Atlas clusters |
+| 🌐 Web Search | Retrieve live internet information and real-time web results |
 
-The backend exposes chat endpoints that accept:
+---
 
-- `message`
-- `session_id`
-- `attached_files`
-- `model`
+# 🧠 Available Text Models
 
-When `Read File` is enabled and the request is file-related, uploaded file content is loaded from the backend safe uploads directory and supplied to the model for analysis.
+| Model Name | Internal Model ID |
+|------------|------------------|
+| Gemini 2.5 Flash | `gemini-2.5-flash` |
+| Gemini 2.0 Flash | `gemini-2.0-flash` |
+| Gemini 3.0 Flash | `gemini-3.0-flash` |
+| OpenAI GPT-4o | `openai/gpt-4o` |
+| Claude Haiku 4.5 | `claude-fast` |
+| DeepSeek-V3 | `deepseek/DeepSeek-V3-0324` |
+| Qwen3 Coder 30B | `qwen-coder` |
+| Moonshot Kimi K2.5 | `kimi` |
+| Zai GLM-5.1 | `glm` |
+| Groq Llama 3.3 70B | `llama-3.3-70b-versatile` |
+| Groq Llama 3.1 8B | `llama-3.1-8b-instant` |
+| Gemini Flash Latest | `gemini-flash-latest` |
 
-## Tooling behavior
+---
 
-### Read File
+# 🎨 Available Image Generation Models
 
-Implemented in:
+| Model Name | Internal Model ID |
+|------------|------------------|
+| FLUX.1 Kontext | `kontext` |
+| FLUX.2 Klein 4B | `klein` |
+| Flux Schnell | `flux` |
+| GPT Image 1 Mini | `gptimage` |
+| Qwen Image Plus | `qwen-image` |
+| Wan 2.7 Image | `wan-image` |
+| Z-Image Turbo | `zimage` |
 
-- [personaforge-backend/services/readFileTool.js](personaforge-backend/services/readFileTool.js)
-- [personaforge-backend/routes/files.js](personaforge-backend/routes/files.js)
-- [personaforge-backend/routes/chat.js](personaforge-backend/routes/chat.js)
+---
 
-Behavior today:
+# 🎬 Available Video Generation Models
 
-- Only text-like files are accepted
-- Files are uploaded into a safe backend uploads directory
-- The backend reads uploaded file content from disk
-- File content is passed into the chat flow for file-related prompts
-- The MCP server also exposes a `read_file` tool
+| Model Name | Internal Model ID |
+|------------|------------------|
+| LTX-2.3 | `ltx-2` |
+| Nova Reel | `nova-reel` |
 
-Supported upload extensions:
+---
 
-- `.txt`
-- `.json`
-- `.md`
-- `.markdown`
-- `.csv`
-- `.tsv`
-- `.log`
-- `.yaml`
-- `.yml`
-- `.xml`
-- `.html`
-- `.css`
-- `.js`
-- `.ts`
+# 🌍 Real-World Use Cases
 
-### Google Search
+PersonaForge can power intelligent AI workflows across multiple industries and domains.
 
-Implemented in:
+### Example Applications
+- Healthcare AI assistants
+- Education and tutoring systems
+- Research copilots
+- Enterprise workflow automation
+- API testing and developer tools
+- Knowledge management platforms
+- Voice-enabled assistants
+- Productivity and scheduling automation
+- Multi-agent business operations
 
-- [personaforge-backend/mcp_server.ts](personaforge-backend/mcp_server.ts)
-- [personaforge-backend/services/ai.js](personaforge-backend/services/ai.js)
-- [personaforge-backend/routes/chat.js](personaforge-backend/routes/chat.js)
+The platform is designed to help developers and organizations deploy scalable AI systems with minimal orchestration complexity.
 
-Behavior today:
+---
 
-- Available as a tool when enabled for an agent
-- Also available through the dedicated backend `/v1/search` route
-- Intended for current-information queries
+# 🛠️ Technologies Used
 
-## Authentication
+### 🎨 Frontend
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- Framer Motion
 
-The frontend currently supports:
+### ⚙️ Backend
+- Node.js
+- Express.js
+- Firebase Firestore
+- Firebase Admin SDK
+- Redis
 
-- Credentials login
+### 🧠 AI & Orchestration
+- Google ADK
+- Gemini API
+- MCP Servers
+
+### 🔐 Authentication
+- NextAuth.js
 - Google OAuth
 - GitHub OAuth
 
-Relevant files:
+### 🔌 Integrations
+- Notion API
+- MongoDB MCP
+- Postman MCP
+- ElevenLabs
+- DDGS Search API
 
-- [lib/auth-config-simple.ts](lib/auth-config-simple.ts)
-- [app/api/auth/login/route.ts](app/api/auth/login/route.ts)
-- [app/api/auth/signup/route.ts](app/api/auth/signup/route.ts)
-- [app/api/auth/[...nextauth]/route.ts](app/api/auth/[...nextauth]/route.ts)
+---
 
-## Data storage
+# ⚙️ Installation
 
-### MongoDB
-
-Used for:
-
-- users
-- agents
-- API keys
-- user SMTP settings
-
-### Redis
-
-Used for chat history only when `REDIS_URL` is configured. If Redis is missing, the backend falls back to an in-memory `Map`, which is suitable for local development but not durable across restarts.
-
-Relevant file:
-
-- [personaforge-backend/services/memory.js](personaforge-backend/services/memory.js)
-
-## Environment variables
-
-These variables are referenced in the current codebase.
-
-### Required for core local development
+## 1️⃣ Clone the repository
 
 ```bash
-MONGODB_URI=
-JWT_SECRET=
-NEXTAUTH_SECRET=
-NEXT_PUBLIC_API_URL=http://localhost:8000
+git clone https://github.com/your-username/personaforge.git
 ```
 
-### Required for credentials + NextAuth flows
+## 2️⃣ Navigate to the project directory
 
 ```bash
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GITHUB_CLIENT_ID=
-GITHUB_CLIENT_SECRET=
+cd personaforge
 ```
 
-### Required for Gemini-backed agent flows
-
-Use one of:
-
-```bash
-GEMINI_API_KEY=
-GOOGLE_GENAI_API_KEY=
-GOOGLE_API_KEY=
-```
-
-### Optional
-
-```bash
-REDIS_URL=
-GROQ_API_KEY=
-POLLINATIONS_API_KEY=
-GOOGLE_SEARCH_ENGINE_ID=
-PORT=8000
-MCP_SERVER_PORT=3001
-MCP_SERVER_URL=http://localhost:3001
-PERSONAFORGE_SAFE_FILE_DIR=
-PERSONAFORGE_MAX_FILE_SIZE_BYTES=
-```
-
-## Installation
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/BikramMondal5/PersonaForge.git
-cd PersonaForge
-```
-
-### 2. Install frontend dependencies
+## 3️⃣ Install dependencies
 
 ```bash
 npm install
 ```
 
-### 3. Install backend dependencies
+## 4️⃣ Configure environment variables
 
-```bash
-cd personaforge-backend
-npm install
-cd ..
+Create a `.env` file and add:
+
+```env
+GEMINI_API_KEY=your_api_key
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_CLIENT_EMAIL=your_client_email
+FIREBASE_PRIVATE_KEY=your_private_key
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
 ```
 
-### 4. Add environment variables
-
-Create your `.env` file at the project root and add the variables you need from the section above.
-
-At minimum for local development, make sure:
-
-- MongoDB is configured
-- frontend `NEXTAUTH_SECRET` is configured
-- backend/frontend JWT secret is configured
-- `NEXT_PUBLIC_API_URL` points to the Express backend
-- a Gemini API key is configured if you want persona chat to work through Gemini
-
-## Running locally
-
-### Start frontend only
+## 5️⃣ Run the development server
 
 ```bash
 npm run dev
 ```
 
-### Start backend only
+## 6️⃣ Open in browser
 
-```bash
-cd personaforge-backend
-npm run dev
+```text
+http://localhost:3000
 ```
 
-### Start both from the repo root
+---
 
-```bash
-npm run dev:all
-```
+# 📸 Screenshot
 
-The frontend runs on `http://localhost:3000`.
+| Dashboard | Agent Studio | Sandbox |
+|-----------|--------------|----------|
+| ![Dashboard](dashboard.png) | ![Agent Studio](studio.png) | ![Sandbox](screenshot.png) |
 
-The backend runs on `http://localhost:8000` by default.
+---
 
-The backend also starts the MCP server automatically.
+# 🚀 How to Use
 
-## Main routes
+- ✨ Sign in using Google or GitHub OAuth
+- 🤖 Create a custom AI agent using natural language
+- 🧠 Define the agent persona, tools, and workflows
+- 🔗 Connect external integrations like Notion or MongoDB
+- 📄 Upload documents for intelligent analysis
+- 🌐 Enable web search and tool-calling capabilities
+- 🎤 Interact with voice-enabled AI agents
+- 🚀 Test and deploy scalable AI workflows instantly
 
-### Frontend pages
+---
 
-- `/`
-- `/login`
-- `/sign-up`
-- `/dashboard`
-- `/create-agent`
-- `/sandbox`
-- `/api-keys`
-- `/settings`
+# 📈 Future Roadmap
 
-### Next.js API routes
+### Upcoming Features
+- Visual drag-and-drop workflow builder
+- Autonomous multi-agent collaboration
+- Community AI agent marketplace
+- Voice-first orchestration system
+- Advanced memory graph architecture
+- Team-based collaborative agents
+- AI workflow analytics dashboard
+- One-click cloud deployment
 
-- `/api/auth/...`
-- `/api/agents`
-- `/api/agents/[id]`
-- `/api/api-keys`
-- `/api/api-keys/[id]`
-- `/api/user/settings`
-- `/api/forge-agent`
 
-### Express backend routes
+# 📜 License
 
-- `GET /health`
-- `POST /forge`
-- `POST /v1/register`
-- `POST /v1/:agentId/chat`
-- `POST /v1/search`
-- `POST /files/upload`
+This project is licensed under the `Apache-2.0 license`.
 
-## Example backend chat request
+---
 
-```bash
-curl -X POST http://localhost:8000/v1/<agentId>/chat \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <api-key>" \
-  -d '{
-    "message": "Summarize the uploaded file",
-    "session_id": "session-123",
-    "attached_files": [],
-    "model": "Gemini 2.5 Flash"
-  }'
-```
+# 💡 Vision
 
-## Notes for contributors
-
-- The frontend and backend are separate runtimes
-- Some UI options are ahead of the actual backend integration
-- The README should be updated against implemented behavior, not planned behavior
-- File-reading behavior currently focuses on uploaded text-based files rather than arbitrary filesystem browsing
-
-## License
-
-Licensed under the Apache License 2.0. See [LICENSE](LICENSE).
+PersonaForge aims to become a universal AI Agent Operating System where anyone can build safe, intelligent, memory-aware, and tool-augmented AI agents without dealing with orchestration complexity.
