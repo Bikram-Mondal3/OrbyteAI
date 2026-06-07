@@ -325,7 +325,7 @@ export default function CreateAgentPage() {
           </div>
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-[#FF7A00]" />
-            <span className="font-black">PersonaForge Studio</span>
+            <span className="font-black">OrbyteAI Studio</span>
           </div>
         </div>
       </header>

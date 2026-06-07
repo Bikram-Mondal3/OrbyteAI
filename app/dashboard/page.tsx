@@ -236,7 +236,7 @@ export default function DashboardPage() {
         <div className="p-6">
           {/* Logo */}
           <a href="/" className="text-2xl font-black mb-8 block">
-            PersonaForge
+            OrbyteAI
           </a>
 
           {/* Navigation */}

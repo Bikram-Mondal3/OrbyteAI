@@ -128,13 +128,13 @@ export default function LoginPage() {
             {/* Logo */}
             <div className="mb-8">
               <a href="/" className="text-5xl lg:text-6xl font-black hover:text-[#FF7A00] transition-colors">
-                PersonaForge
+                OrbyteAI
               </a>
             </div>
 
             {/* Headline */}
             <h1 className="text-5xl lg:text-7xl font-black leading-tight mb-8">
-              Welcome Back to <span className="text-[#FF7A00]">PersonaForge</span>
+              Welcome Back to <span className="text-[#FF7A00]">OrbyteAI</span>
             </h1>
             <p className="text-2xl lg:text-3xl text-gray-700">
               Continue building and deploying AI agents in minutes.
@@ -153,7 +153,7 @@ export default function LoginPage() {
             <Card className="hover:translate-y-[-2px] transition-transform">
               {/* Form Header */}
               <div className="mb-8">
-                <h2 className="text-3xl font-black mb-2">Login to PersonaForge</h2>
+                <h2 className="text-3xl font-black mb-2">Login to OrbyteAI</h2>
                 <p className="text-gray-600">Access your AI agent workspace.</p>
               </div>
 

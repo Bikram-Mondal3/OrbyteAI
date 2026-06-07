@@ -114,7 +114,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
 Card.displayName = "Card"
 
 // Main Component
-function PersonaForgeLanding() {
+function OrbyteAILanding() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -162,7 +162,7 @@ function PersonaForgeLanding() {
   const features = [
     {
       icon: <Sparkles className="w-8 h-8" />,
-      title: "PersonaForge Engine",
+      title: "OrbyteAI Engine",
       description: "Transforms natural language into structured AI agent prompts instantly.",
       color: "#5CC8FF"
     },
@@ -208,7 +208,7 @@ function PersonaForgeLanding() {
     {
       number: "02",
       title: "Forge",
-      description: "PersonaForge converts your description into a structured agent configuration.",
+      description: "OrbyteAI converts your description into a structured agent configuration.",
       color: "#FFD84D"
     },
     {
@@ -227,7 +227,7 @@ function PersonaForgeLanding() {
 
   const testimonials = [
     {
-      quote: "PersonaForge lets us prototype AI assistants in minutes instead of weeks.",
+      quote: "OrbyteAI lets us prototype AI assistants in minutes instead of weeks.",
       author: "Sarah Chen",
       role: "CTO, TechStart",
       avatar: "SC"
@@ -253,7 +253,7 @@ function PersonaForgeLanding() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center">
-              <span className="text-2xl font-black">PersonaForge</span>
+              <span className="text-2xl font-black">OrbyteAI</span>
             </div>
 
             {/* Desktop Navigation */}
@@ -325,7 +325,7 @@ function PersonaForgeLanding() {
               <span className="text-[#FF7A00]">Without Writing Code</span>
             </h1>
             <p className="text-xl lg:text-2xl mb-8 text-gray-700 max-w-3xl mx-auto">
-              Describe your AI assistant in plain English. PersonaForge instantly generates the prompts, guardrails, memory configuration, and deployment pipeline.
+              Describe your AI assistant in plain English. OrbyteAI instantly generates the prompts, guardrails, memory configuration, and deployment pipeline.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" onClick={handleStartBuilding} disabled={authLoading}>
@@ -626,8 +626,8 @@ function PersonaForgeLanding() {
           <div className="space-y-4">
             {[
               {
-                q: "Do I need coding knowledge to use PersonaForge?",
-                a: "No! PersonaForge is designed for everyone. Just describe your agent in plain English and we'll handle the rest.",
+                q: "Do I need coding knowledge to use OrbyteAI?",
+                a: "No! OrbyteAI is designed for everyone. Just describe your agent in plain English and we'll handle the rest.",
                 color: "#5CC8FF"
               },
               {
@@ -799,12 +799,12 @@ function PersonaForgeLanding() {
               </ul>
             </div>
             <div>
-              <h3 className="font-black text-xl mb-4">PersonaForge</h3>
+              <h3 className="font-black text-xl mb-4">OrbyteAI</h3>
               <p className="text-gray-400">Build AI agents without code.</p>
             </div>
           </div>
           <div className="border-t-[3px] border-gray-800 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 PersonaForge. All rights reserved.</p>
+            <p>&copy; 2024 OrbyteAI. All rights reserved.</p>
           </div>
         </div>
       </footer>
@@ -813,5 +813,5 @@ function PersonaForgeLanding() {
 }
 
 export default function Page() {
-  return <PersonaForgeLanding />
+  return <OrbyteAILanding />
 }

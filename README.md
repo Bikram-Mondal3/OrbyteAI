@@ -1,10 +1,43 @@
-# 🤖🌟 PersonaForge – AI Agent Orchestration Platform
+# 🤖🌟 OrbyteAI – AI Agent Orchestration Platform
 
-![Preview Image](screenshot.png)
+<p align="center">
+  <a href="https://github.com/Bikram-Mondal3/OrbyteAI" target="_blank">
+    <img src="https://img.shields.io/badge/OrbyteAI-AI%20Agent%20Platform-FF7A00?style=for-the-badge&logo=dependabot&logoColor=white" alt="OrbyteAI AI Agent Platform" />
+  </a>
+  <a href="https://github.com/Bikram-Mondal3/OrbyteAI/stargazers" target="_blank">
+    <img src="https://img.shields.io/github/stars/Bikram-Mondal3/OrbyteAI?style=for-the-badge&logo=github&label=STARS&color=f59e0b" alt="GitHub Stars" />
+  </a>
+  <a href="https://github.com/Bikram-Mondal3/OrbyteAI/blob/main/LICENSE" target="_blank">
+    <img src="https://img.shields.io/github/license/Bikram-Mondal3/OrbyteAI?style=for-the-badge&label=LICENSE&color=16a34a" alt="License" />
+  </a>
+</p>
 
-PersonaForge is a next-generation AI Agent Orchestration Platform that allows users to create powerful, persona-driven AI agents using natural language. The platform combines intelligent orchestration, memory systems, tool integrations, and safety guardrails to help developers build production-ready AI workflows without manually engineering complex multi-agent systems.
+<p align="center">
+  <a href="https://nextjs.org/" target="_blank">
+    <img src="https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js" />
+  </a>
+  <a href="https://react.dev/" target="_blank">
+    <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=111827" alt="React" />
+  </a>
+  <a href="https://www.typescriptlang.org/" target="_blank">
+    <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  </a>
+  <a href="https://www.mongodb.com/" target="_blank">
+    <img src="https://img.shields.io/badge/MongoDB-Database-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" />
+  </a>
+  <a href="https://ai.google.dev/gemini-api" target="_blank">
+    <img src="https://img.shields.io/badge/Gemini-AI%20Runtime-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Gemini AI Runtime" />
+  </a>
+  <a href="https://modelcontextprotocol.io/" target="_blank">
+    <img src="https://img.shields.io/badge/MCP-Tool%20Integrations-7C3AED?style=for-the-badge&logo=protocols.io&logoColor=white" alt="Model Context Protocol" />
+  </a>
+</p>
 
-From web search to image generation, from video generation to workflow automation, PersonaForge transforms prompts into scalable, domain-specific AI specialists.
+![Preview Image](public/studio.png)
+
+OrbyteAI is a next-generation AI Agent Orchestration Platform that allows users to create powerful, persona-driven AI agents using natural language. The platform combines intelligent orchestration, memory systems, tool integrations, and safety guardrails to help developers build production-ready AI workflows without manually engineering complex multi-agent systems.
+
+From web search to image generation, from video generation to workflow automation, OrbyteAI transforms prompts into scalable, domain-specific AI specialists.
 
 ---
 
@@ -12,7 +45,7 @@ From web search to image generation, from video generation to workflow automatio
 
 Building AI agents today is complex and fragmented. Developers must manually manage prompt engineering, workflow orchestration, memory systems, tool integrations, and safety guardrails. As agents become more advanced, maintaining reliable, secure, and context-aware behavior becomes increasingly difficult.
 
-PersonaForge solves this by providing a unified platform to create safe, intelligent, persona-driven, and tool-augmented AI agents with simplified orchestration and scalable workflows.
+OrbyteAI solves this by providing a unified platform to create safe, intelligent, persona-driven, and tool-augmented AI agents with simplified orchestration and scalable workflows.
 
 # 🌟 Features
 
@@ -33,7 +66,7 @@ PersonaForge solves this by providing a unified platform to create safe, intelli
 
 # 🏗️ Architecture Overview
 
-PersonaForge follows a layered AI orchestration architecture designed for scalability, safety, and intelligent workflow execution.
+OrbyteAI follows a layered AI orchestration architecture designed for scalability, safety, and intelligent workflow execution.
 
 ```mermaid
 graph TD
@@ -54,7 +87,7 @@ The platform combines persona enforcement, workflow orchestration, memory system
 
 # 🛡️ Safety & Guardrails
 
-PersonaForge includes multi-layer safety systems to ensure reliable and controllable AI behavior.
+OrbyteAI includes multi-layer safety systems to ensure reliable and controllable AI behavior.
 
 ### Core Protection Layers
 - Persona consistency enforcement
@@ -128,7 +161,7 @@ These mechanisms help agents remain safe, stable, and production-ready across lo
 
 # 🌍 Real-World Use Cases
 
-PersonaForge can power intelligent AI workflows across multiple industries and domains.
+OrbyteAI can power intelligent AI workflows across multiple industries and domains.
 
 ### Example Applications
 - Healthcare AI assistants
@@ -185,13 +218,13 @@ The platform is designed to help developers and organizations deploy scalable AI
 ## 1️⃣ Clone the repository
 
 ```bash
-git clone https://github.com/your-username/personaforge.git
+git clone https://github.com/Bikram-Mondal3/OrbyteAI.git
 ```
 
 ## 2️⃣ Navigate to the project directory
 
 ```bash
-cd personaforge
+cd OrbyteAI
 ```
 
 ## 3️⃣ Install dependencies
@@ -271,4 +304,4 @@ This project is licensed under the `Apache-2.0 license`.
 
 # 💡 Vision
 
-PersonaForge aims to become a universal AI Agent Operating System where anyone can build safe, intelligent, memory-aware, and tool-augmented AI agents without dealing with orchestration complexity.
+OrbyteAI aims to become a universal AI Agent Operating System where anyone can build safe, intelligent, memory-aware, and tool-augmented AI agents without dealing with orchestration complexity.

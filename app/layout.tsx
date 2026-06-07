@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PersonaForge - AI Agent Builder",
+  title: "OrbyteAI - AI Agent Builder",
   description: "Build and deploy AI agents without code",
 };
 
