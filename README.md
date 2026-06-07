@@ -1,3 +1,79 @@
+# Open Source Hackathon 2026 Project Submission
+
+## Participant Details
+
+**Full Name:**  
+Bikram Mondal
+
+**GitHub Username:**  
+Bikram-Mondal3
+
+**Team Name:**  
+GitGuardians
+
+**College/University:**  
+Heritage Institute of Technology, Kolkata
+
+---
+
+## Project Details
+
+**Project Title:**  
+OrbyteAI
+
+**Project Description:**  
+OrbyteAI is an AI Agent Orchestration Platform that helps users create, test, and deploy persona-driven AI agents using natural language. It solves the problem of fragmented agent development by combining prompt generation, memory, guardrails, model selection, tool integrations, web search, file intelligence, image generation, video generation, and sandbox testing into one workflow.
+
+**Tech Stack Used:**  
+Next.js, React, TypeScript, Tailwind CSS, Framer Motion, Node.js, Express.js, MongoDB, Firebase, NextAuth.js, Google ADK, Gemini API, MCP Servers
+
+**GitHub Repository Link:**  
+https://github.com/Bikram-Mondal3/OrbyteAI
+
+**Live Demo Link:**  
+https://drive.google.com/file/d/1TVpFt6QJkdPlDZE22jy8R5O8tH2Fxcqf/view?usp=drive_link
+
+**Presentation / Demo Video Link:**  
+https://drive.google.com/file/d/1TVpFt6QJkdPlDZE22jy8R5O8tH2Fxcqf/view?usp=drive_link
+
+---
+
+## Open Source Readiness
+
+- [x] My project is public on GitHub
+- [x] My repository has a proper README.md
+- [x] I have added setup/installation instructions
+- [x] I have added screenshots/demo where possible
+- [x] I have added a license file
+- [x] My project is original and built/updated during the hackathon period
+
+---
+
+## Memori Labs Sponsor Task
+
+Please complete these before submitting:
+
+- [x] I have starred the Memori Labs GitHub repository  
+  https://github.com/MemoriLabs/Memori
+
+- [x] I have followed Memori Labs on LinkedIn  
+  https://www.linkedin.com/company/memorilabs/
+
+- [x] I have followed Memori Labs on X  
+  https://x.com/memorilab
+
+- [x] I have checked Memori Labs social links  
+  https://linktr.ee/memorilabs
+
+---
+
+## ID Card Verification
+
+- [x] I have generated my ID card from https://oshack.xyz
+- [x] If my ID was not verified, I completed the mandatory verification/giveaway form and tried again
+
+---
+
 # 🤖🌟 OrbyteAI – AI Agent Orchestration Platform
 
 <p align="center">
@@ -177,42 +253,6 @@ OrbyteAI can power intelligent AI workflows across multiple industries and domai
 The platform is designed to help developers and organizations deploy scalable AI systems with minimal orchestration complexity.
 
 ---
-
-# 🛠️ Technologies Used
-
-### 🎨 Frontend
-- Next.js
-- React
-- TypeScript
-- Tailwind CSS
-- Framer Motion
-
-### ⚙️ Backend
-- Node.js
-- Express.js
-- Firebase Firestore
-- Firebase Admin SDK
-- Redis
-
-### 🧠 AI & Orchestration
-- Google ADK
-- Gemini API
-- MCP Servers
-
-### 🔐 Authentication
-- NextAuth.js
-- Google OAuth
-- GitHub OAuth
-
-### 🔌 Integrations
-- Notion API
-- MongoDB MCP
-- Postman MCP
-- ElevenLabs
-- DDGS Search API
-
----
-
 # ⚙️ Installation
 
 ## 1️⃣ Clone the repository
@@ -221,46 +261,60 @@ The platform is designed to help developers and organizations deploy scalable AI
 git clone https://github.com/Bikram-Mondal3/OrbyteAI.git
 ```
 
-## 2️⃣ Navigate to the project directory
+## 2️⃣ Configure Environment Variables
+
+This repository includes example environment files:
+
+```text
+OrbyteAI/.env.example
+OrbyteAI/personaforge-backend/.env.example
+```
+
+Rename them as follows:
+
+```text
+OrbyteAI/.env.example                    → OrbyteAI/.env
+OrbyteAI/personaforge-backend/.env.example → OrbyteAI/personaforge-backend/.env
+```
+
+After renaming, open both `.env` files and fill in the required environment variable values.
+
+> Ensure that all environment variables referenced by the frontend and backend applications are properly configured before starting the servers.
+
+---
+
+## 3️⃣ Install Dependencies & Start Frontend
+
+Open **Terminal 1**:
 
 ```bash
 cd OrbyteAI
-```
-
-## 3️⃣ Install dependencies
-
-```bash
 npm install
-```
-
-## 4️⃣ Configure environment variables
-
-Create a `.env` file and add:
-
-```env
-GEMINI_API_KEY=your_api_key
-FIREBASE_PROJECT_ID=your_project_id
-FIREBASE_CLIENT_EMAIL=your_client_email
-FIREBASE_PRIVATE_KEY=your_private_key
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GITHUB_CLIENT_ID=your_github_client_id
-GITHUB_CLIENT_SECRET=your_github_client_secret
-```
-
-## 5️⃣ Run the development server
-
-```bash
 npm run dev
 ```
 
-## 6️⃣ Open in browser
+---
+
+## 4️⃣ Install Dependencies & Start Backend
+
+Open **Terminal 2**:
+
+```bash
+cd OrbyteAI/personaforge-backend
+npm install
+npm run dev
+```
+
+---
+
+## 5️⃣ Open in Browser
 
 ```text
 http://localhost:3000
 ```
 
----
+Make sure both the frontend and backend servers are running simultaneously for the application to function correctly.
+
 
 # 📸 Screenshot
 
