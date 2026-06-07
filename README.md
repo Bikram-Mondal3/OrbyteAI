@@ -233,7 +233,7 @@ http://localhost:3000
 
 | Dashboard | Agent Studio | Sandbox |
 |-----------|--------------|----------|
-| ![Dashboard](dashboard.png) | ![Agent Studio](studio.png) | ![Sandbox](screenshot.png) |
+| ![Dashboard](public/dashboard.png) | ![Agent Studio](public/studio.png) | ![Sandbox](public/screenshot.png) |
 
 ---
 
